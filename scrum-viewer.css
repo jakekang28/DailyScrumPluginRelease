@@ -1,0 +1,588 @@
+/* ============================================
+   Daily Scrum Viewer - Modern UI
+   Notion-inspired clean design
+   ============================================ */
+
+   * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f6f3;
+    --text-primary: #37352f;
+    --text-secondary: #787774;
+    --text-tertiary: #9b9a97;
+    --accent: #2383e2;
+    --accent-hover: #1a6fc9;
+    --border: rgba(55, 53, 47, 0.09);
+    --gradient-start: #667eea;
+    --gradient-end: #764ba2;
+}
+
+body {
+    font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+}
+
+/* ===== 로딩 화면 ===== */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loader-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 48px;
+}
+
+.loader-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.loader-ring:nth-child(1) {
+    animation: spin 2s linear infinite;
+}
+
+.loader-ring:nth-child(2) {
+    width: 90px;
+    height: 90px;
+    top: 15px;
+    left: 15px;
+    border-top-color: rgba(255, 255, 255, 0.2);
+    animation: spin 1.5s linear infinite reverse;
+}
+
+.loader-ring:nth-child(3) {
+    width: 70px;
+    height: 70px;
+    top: 25px;
+    left: 25px;
+    border-top-color: rgba(255, 255, 255, 0.4);
+    animation: spin 1s linear infinite;
+}
+
+.loader-core {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    top: 35px;
+    left: 35px;
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 40px rgba(102, 126, 234, 0.4);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.9); opacity: 0.8; }
+}
+
+.loading-text {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+    margin-bottom: 12px;
+}
+
+.loading-subtext {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    font-weight: 400;
+    min-height: 20px;
+    transition: opacity 0.3s ease;
+}
+
+.progress-bar {
+    width: 200px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    margin-top: 32px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* ===== Daily Scrum 결과 화면 ===== */
+.scrum-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 80px 96px;
+    padding-bottom: 120px;
+    display: none;
+}
+
+.scrum-container.visible {
+    display: block;
+    animation: fadeSlideUp 0.6s ease;
+}
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.scrum-icon {
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 16px;
+}
+
+.scrum-title {
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+}
+
+.scrum-date {
+    font-size: 14px;
+    color: var(--text-tertiary);
+    margin-bottom: 48px;
+}
+
+.scrum-section {
+    margin-bottom: 36px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.section-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+
+.section-content {
+    padding-left: 30px;
+}
+
+.scrum-item {
+    position: relative;
+    padding: 8px 0;
+    font-size: 16px;
+    color: var(--text-primary);
+    line-height: 1.7;
+    opacity: 0;
+    animation: itemSlideIn 0.4s ease forwards;
+}
+
+.scrum-item::before {
+    content: '•';
+    position: absolute;
+    left: -18px;
+    color: var(--text-tertiary);
+}
+
+@keyframes itemSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+}
+
+/* ===== 에러 화면 ===== */
+.error-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+}
+
+.error-screen.visible {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.error-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+}
+
+.error-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.error-message {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+.retry-btn {
+    padding: 12px 24px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.retry-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+.retry-btn:active {
+    transform: translateY(0);
+}
+
+/* ===== 빈 상태 화면 ===== */
+.empty-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+}
+
+.empty-screen.visible {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+    opacity: 0.5;
+}
+
+.empty-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.empty-message {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.6;
+}
+
+.generate-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.generate-btn:active {
+    transform: translateY(0);
+}
+
+.generate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ===== 플로팅 컨트롤 ===== */
+.floating-controls {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+    box-shadow: 
+        0 4px 24px rgba(0, 0, 0, 0.08),
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    z-index: 100;
+}
+
+.floating-controls.visible {
+    display: flex;
+    animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.date-picker {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.date-picker:hover {
+    border-color: rgba(55, 53, 47, 0.2);
+}
+
+.date-picker:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(35, 131, 226, 0.15);
+}
+
+.control-btn {
+    padding: 10px 18px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+    background: #eeeeee;
+    border-color: rgba(55, 53, 47, 0.2);
+}
+
+.control-btn:active {
+    transform: scale(0.98);
+}
+
+.control-btn.primary {
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.control-btn.primary:hover {
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transform: translateY(-1px);
+}
+
+.control-btn.primary:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 768px) {
+    .scrum-container {
+        padding: 48px 24px;
+        padding-bottom: 100px;
+    }
+
+    .scrum-title {
+        font-size: 32px;
+    }
+
+    .scrum-icon {
+        font-size: 48px;
+    }
+
+    .section-title {
+        font-size: 16px;
+    }
+
+    .scrum-item {
+        font-size: 15px;
+    }
+
+    .floating-controls {
+        left: 16px;
+        right: 16px;
+        transform: none;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .floating-controls.visible {
+        animation: slideUpMobile 0.4s ease;
+    }
+
+    @keyframes slideUpMobile {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .date-picker {
+        flex: 1;
+        min-width: 120px;
+    }
+}
+
+/* ===== 다크모드 지원 (선택사항) ===== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: #191919;
+        --bg-secondary: #252525;
+        --text-primary: #e6e6e6;
+        --text-secondary: #9b9b9b;
+        --text-tertiary: #6b6b6b;
+        --border: rgba(255, 255, 255, 0.1);
+    }
+
+    .floating-controls {
+        background: rgba(30, 30, 30, 0.95);
+        box-shadow: 
+            0 4px 24px rgba(0, 0, 0, 0.3),
+            0 1px 2px rgba(0, 0, 0, 0.2),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .date-picker {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .control-btn {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .control-btn:hover {
+        background: #333;
+    }
+
+    .error-screen,
+    .empty-screen {
+        background: var(--bg-primary);
+    }
+}
