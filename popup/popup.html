@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Scrum Tracker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- 데이터 수집 동의 화면 (최초 실행 시) -->
+  <div id="consent-view" class="hidden">
+    <div class="header">
+      <h1>Daily Scrum Tracker</h1>
+      <p class="subtitle">데이터 수집 및 사용에 대한 동의</p>
+    </div>
+
+    <div class="consent-content">
+      <section class="consent-section">
+        <h3>수집하는 데이터</h3>
+        <ul class="consent-list">
+          <li><strong>AI 도구 대화 내용</strong> — ChatGPT, Claude, Gemini에서의 질문과 응답</li>
+          <li><strong>협업 도구 활동</strong> — Notion 페이지 제목, Slack 메시지 요약</li>
+          <li><strong>Google Workspace 활동</strong> — Docs/Sheets/Slides 문서 제목 및 편집 활동</li>
+          <li><strong>인터랙션 메트릭</strong> — 클릭 횟수, 스크롤 패턴, 타이핑 컨텍스트, 탭 전환 패턴, 집중도 분포</li>
+        </ul>
+      </section>
+
+      <section class="consent-section">
+        <h3>수집하지 않는 데이터</h3>
+        <ul class="consent-list">
+          <li>비밀번호, 신용카드 정보 등 민감 정보</li>
+          <li>키 입력 내용 (키로깅 없음)</li>
+          <li>URL 전체 경로, 탭 제목</li>
+          <li>복사/붙여넣기한 내용</li>
+          <li>스크롤 좌표, 클릭 위치</li>
+        </ul>
+      </section>
+
+      <section class="consent-section">
+        <h3>사용 목적</h3>
+        <p class="consent-text">
+          수집된 데이터는 <strong>Daily Scrum 보고서 생성</strong> 목적으로만 사용됩니다.
+          사고 과정, 작업 내용, 인지 흐름을 분석하여 자동으로 정리된 업무 보고서를 제공합니다.
+        </p>
+      </section>
+
+      <section class="consent-section">
+        <h3>데이터 보안</h3>
+        <p class="consent-text">
+          모든 데이터는 <strong>AES-GCM-256 암호화</strong>를 통해 전송되며,
+          Supabase 서버에서 안전하게 저장됩니다. 사용자 인증(RLS)을 통해 본인만 접근할 수 있습니다.
+        </p>
+      </section>
+
+      <section class="consent-section">
+        <h3>제3자 공유</h3>
+        <p class="consent-text">
+          수집된 데이터는 <strong>제3자와 공유되지 않으며</strong>, 판매하거나 광고 목적으로 사용하지 않습니다.
+        </p>
+      </section>
+
+      <div class="consent-notice">
+        <p><strong>중요:</strong> 동의하지 않으면 어떤 데이터도 수집되지 않습니다.
+        언제든지 확장 프로그램을 제거하여 데이터 수집을 중단할 수 있습니다.</p>
+      </div>
+    </div>
+
+    <div class="consent-actions">
+      <button id="consent-agree-btn" class="btn btn-primary">동의하고 시작하기</button>
+      <button id="consent-decline-btn" class="btn btn-secondary">거부</button>
+    </div>
+  </div>
+
+  <!-- 비로그인 상태 -->
+  <div id="auth-view" class="hidden">
+    <div class="header">
+      <h1>Daily Scrum Tracker</h1>
+      <p class="subtitle">업무 활동을 자동으로 수집하여 Daily Scrum을 생성합니다</p>
+    </div>
+
+    <!-- 로그인/회원가입 탭 -->
+    <div class="auth-tabs">
+      <button id="login-tab" class="tab-btn active">로그인</button>
+      <button id="signup-tab" class="tab-btn">회원가입</button>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <form id="login-form" class="auth-form">
+      <div class="form-group">
+        <label for="login-email">이메일</label>
+        <input type="email" id="login-email" placeholder="이메일을 입력하세요" required>
+      </div>
+      <div class="form-group">
+        <label for="login-password">비밀번호</label>
+        <input type="password" id="login-password" placeholder="비밀번호를 입력하세요" required>
+      </div>
+      <button type="submit" class="btn btn-primary">로그인</button>
+    </form>
+
+    <!-- 회원가입 폼 -->
+    <form id="signup-form" class="auth-form hidden">
+      <div class="form-group">
+        <label for="signup-email">이메일</label>
+        <input type="email" id="signup-email" placeholder="이메일을 입력하세요" required>
+      </div>
+      <div class="form-group">
+        <label for="signup-password">비밀번호</label>
+        <input type="password" id="signup-password" placeholder="비밀번호를 입력하세요 (최소 6자)" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label for="signup-password-confirm">비밀번호 확인</label>
+        <input type="password" id="signup-password-confirm" placeholder="비밀번호를 다시 입력하세요" required minlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary">회원가입</button>
+    </form>
+
+    <div class="divider">
+      <span>또는</span>
+    </div>
+
+    <button id="google-login-btn" class="btn btn-google">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+        <path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9.003 18z" fill="#34A853"/>
+        <path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9.001c0 1.452.348 2.827.957 4.041l3.007-2.332z" fill="#FBBC05"/>
+        <path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.428 0 9.003 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335"/>
+      </svg>
+      Google 계정으로 로그인
+    </button>
+
+    <div id="error-message" class="error hidden"></div>
+    <div id="success-message" class="success hidden"></div>
+  </div>
+
+  <!-- 로그인 상태 -->
+  <div id="main-view" class="hidden">
+    <div class="header">
+      <h1>Daily Scrum Tracker</h1>
+      <p id="user-email" class="user-email"></p>
+    </div>
+
+    <!-- 수집 상태 -->
+    <section class="status-section">
+      <h2>수집 상태</h2>
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="label">상태</span>
+          <span id="collection-status" class="value">활성</span>
+        </div>
+        <div class="status-item">
+          <span class="label">수집 항목</span>
+          <span id="collected-count" class="value">0개</span>
+        </div>
+        <div class="status-item">
+          <span class="label">마지막 전송</span>
+          <span id="last-sync" class="value">-</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Google Workspace API 권한 -->
+    <section class="google-api-section">
+      <h2>Google Workspace API</h2>
+      <div class="api-status">
+        <div class="status-item">
+          <span class="label">API 접근</span>
+          <span id="google-api-status" class="value">미인증</span>
+        </div>
+      </div>
+      <button id="google-api-auth-btn" class="btn btn-secondary">Google Workspace 권한 부여</button>
+      <p class="api-notice">Docs, Sheets, Slides 내용을 수집하려면 권한이 필요합니다</p>
+    </section>
+
+    <!-- 수집 대상 사이트 -->
+    <section class="sites-section">
+      <h2>수집 대상 사이트</h2>
+      <div id="site-toggles" class="site-toggles">
+        <!-- JavaScript로 동적 생성 -->
+      </div>
+    </section>
+
+    <!-- 액션 버튼 -->
+    <section class="actions-section">
+      <button id="view-scrum-btn" class="btn btn-primary">Daily Scrum 보기</button>
+      <button id="logout-btn" class="btn btn-secondary">로그아웃</button>
+    </section>
+  </div>
+
+  <!-- 로딩 상태 -->
+  <div id="loading-view">
+    <div class="spinner"></div>
+    <p>로딩 중...</p>
+  </div>
+
+  <script type="module" src="popup.bundle.js"></script>
+</body>
+</html>

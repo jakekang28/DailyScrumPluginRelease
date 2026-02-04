@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Scrum</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="scrum-viewer.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+</head>
+<body>
+    <!-- 로딩 화면 -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader-container">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-core"></div>
+        </div>
+        <div class="loading-text">Generating Daily Scrum</div>
+        <div class="loading-subtext" id="loadingSubtext">Analyzing your activities...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <!-- Daily Scrum 결과 -->
+    <div class="scrum-container" id="scrumContainer">
+        <div class="scrum-icon">📋</div>
+        <h1 class="scrum-title">Daily Scrum</h1>
+        <div class="scrum-date" id="scrumDate"></div>
+
+        <div id="scrumContent">
+            <!-- 동적으로 생성됨 -->
+        </div>
+    </div>
+
+    <!-- 에러 화면 -->
+    <div class="error-screen" id="errorScreen">
+        <div class="error-icon">⚠️</div>
+        <h2 class="error-title" id="errorTitle">오류가 발생했습니다</h2>
+        <p class="error-message" id="errorMessage"></p>
+        <button class="retry-btn" id="retryBtn">다시 시도</button>
+    </div>
+
+    <!-- 빈 상태 화면 -->
+    <div class="empty-screen" id="emptyScreen">
+        <div class="empty-icon">📄</div>
+        <h2 class="empty-title">보고서 없음</h2>
+        <p class="empty-message" id="emptyMessage">이 날짜에 수집된 활동 데이터가 없습니다.</p>
+        <button class="generate-btn" id="generateBtn">보고서 생성</button>
+    </div>
+
+    <!-- 플로팅 컨트롤 -->
+    <div class="floating-controls" id="floatingControls">
+        <input type="date" id="datePicker" class="date-picker">
+        <button class="control-btn" id="todayBtn">Today</button>
+        <button class="control-btn primary" id="generateBtnMain">Generate</button>
+    </div>
+
+    <script type="module" src="scrum-viewer.bundle.js"></script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+{
+  "manifest_version": 3,
+  "name": "AI work digest - Loom",
+  "version": "1.0.0",
+  "description": "Auto-summarize your daily work across AI tools and collaboration apps. End-to-end encrypted. Details in app.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "alarms",
+    "identity",
+    "scripting",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "https://*.supabase.co/*"
+  ],
+  "optional_host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://www.notion.so/*",
+    "https://app.slack.com/*",
+    "https://docs.google.com/*",
+    "https://sheets.google.com/*",
+    "https://slides.google.com/*",
+    "https://drive.google.com/*",
+    "https://developer.mozilla.org/*",
+    "https://stackoverflow.com/*",
+    "https://github.com/*",
+    "https://medium.com/*",
+    "https://dev.to/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*"
+      ],
+      "js": [
+        "content-scripts/llm-capture.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.notion.so/*",
+        "https://app.slack.com/*"
+      ],
+      "js": [
+        "content-scripts/collab-capture.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://docs.google.com/*",
+        "https://sheets.google.com/*",
+        "https://slides.google.com/*",
+        "https://drive.google.com/*"
+      ],
+      "js": [
+        "content-scripts/google-capture.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://developer.mozilla.org/*",
+        "https://stackoverflow.com/*",
+        "https://github.com/*",
+        "https://medium.com/*",
+        "https://dev.to/*"
+      ],
+      "js": [
+        "content-scripts/web-reference-tracker.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://www.notion.so/*",
+        "https://app.slack.com/*",
+        "https://docs.google.com/*",
+        "https://sheets.google.com/*",
+        "https://slides.google.com/*",
+        "https://drive.google.com/*"
+      ],
+      "js": [
+        "content-scripts/interaction-tracker.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.bundle.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "injected/network-intercept.js"
+      ],
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*"
+      ]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "oauth2": {
+    "client_id": "167290902104-imhrqtn31orq6tno55ceodo8g4b45478.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/documents.readonly",
+      "https://www.googleapis.com/auth/spreadsheets.readonly",
+      "https://www.googleapis.com/auth/presentations.readonly",
+      "https://www.googleapis.com/auth/drive.readonly"
+    ]
+  }
+}
