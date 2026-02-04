@@ -12,6 +12,9 @@
     "scripting",
     "offscreen"
   ],
+  "host_permissions": [
+    "https://*.supabase.co/*"
+  ],
   "optional_host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
