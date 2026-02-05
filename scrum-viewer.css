@@ -549,7 +549,14 @@ body {
     transform: none !important;
 }
 
-/* ===== Sync 버튼 ===== */
+/* ===== Sync 컨테이너 ===== */
+.sync-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+}
+
 .control-btn.sync {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     color: white;
@@ -558,38 +565,69 @@ body {
     align-items: center;
     gap: 6px;
     box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+    transition: all 0.2s ease;
 }
 
-.control-btn.sync:hover {
+.control-btn.sync:hover:not(:disabled) {
     box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
     transform: translateY(-1px);
 }
 
-.control-btn.sync:active {
+.control-btn.sync:active:not(:disabled) {
     transform: translateY(0) scale(0.98);
 }
 
-.control-btn.sync.hidden {
-    display: none;
+.control-btn.sync:disabled {
+    background: linear-gradient(135deg, #a8a8a8 0%, #888888 100%);
+    box-shadow: none;
+    cursor: default;
+    opacity: 0.7;
+}
+
+.control-btn.sync.syncing {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
 .sync-icon {
     font-size: 14px;
     display: inline-block;
+    transition: transform 0.3s ease;
 }
 
-.control-btn.sync:not(:disabled) .sync-icon {
-    animation: spin 2s linear infinite;
-    animation-play-state: paused;
-}
-
-.control-btn.sync:disabled .sync-icon {
-    animation-play-state: running;
+.control-btn.sync.syncing .sync-icon {
+    animation: spin 1s linear infinite;
 }
 
 .sync-status {
     font-size: 12px;
     font-weight: 500;
+}
+
+/* Sync Progress Bar */
+.sync-progress {
+    height: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sync-progress.visible {
+    opacity: 1;
+}
+
+.sync-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.sync-progress-fill.complete {
+    background: linear-gradient(90deg, #10b981, #059669);
 }
 
 /* ===== Cognitive Flow 버튼 ===== */
