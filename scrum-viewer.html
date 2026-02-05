@@ -53,14 +53,36 @@
         <button class="generate-btn" id="generateBtn">보고서 생성</button>
     </div>
 
+    <!-- Cognitive Flow 오버레이 -->
+    <div class="cf-overlay" id="cfOverlay">
+        <div class="cf-overlay-backdrop" id="cfOverlayBackdrop"></div>
+        <div class="cf-overlay-panel" id="cfOverlayPanel">
+            <div class="cf-overlay-header">
+                <div class="cf-overlay-title">
+                    <span class="cf-title-icon">🧠</span>
+                    <span>Cognitive Flow</span>
+                </div>
+                <button class="cf-overlay-close" id="cfOverlayClose">✕</button>
+            </div>
+            <div class="cf-overlay-content" id="cfOverlayContent">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
     <!-- 플로팅 컨트롤 -->
     <div class="floating-controls" id="floatingControls">
         <input type="date" id="datePicker" class="date-picker">
         <button class="control-btn" id="todayBtn">Today</button>
-        <button class="control-btn sync hidden" id="syncBtn">
-            <span class="sync-icon">🔄</span>
-            <span class="sync-status" id="syncStatus">0개 대기</span>
-        </button>
+        <div class="sync-container" id="syncContainer">
+            <button class="control-btn sync" id="syncBtn" disabled>
+                <span class="sync-icon">🔄</span>
+                <span class="sync-status" id="syncStatus">동기화 완료</span>
+            </button>
+            <div class="sync-progress" id="syncProgress">
+                <div class="sync-progress-fill" id="syncProgressFill"></div>
+            </div>
+        </div>
         <button class="control-btn primary" id="generateBtnMain">Generate</button>
     </div>
 
