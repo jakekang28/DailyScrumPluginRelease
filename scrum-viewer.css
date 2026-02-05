@@ -217,8 +217,61 @@ body {
     letter-spacing: -0.01em;
 }
 
+/* Section content wrapper for side-by-side layout */
+.section-content-wrapper {
+    display: flex;
+    gap: 24px;
+    transition: all 0.3s ease;
+}
+
+.section-content-wrapper.expanded {
+    /* When cognitive flow is expanded, show side panel */
+}
+
 .section-content {
+    flex: 1;
+    min-width: 0;
     padding-left: 30px;
+}
+
+/* Task row: horizontal flex (fact | reasoning) */
+.task-row {
+    display: flex;
+    gap: 20px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    animation: itemSlideIn 0.4s ease forwards;
+}
+
+.task-row:last-child {
+    border-bottom: none;
+}
+
+.task-fact {
+    flex: 1;
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.7;
+    position: relative;
+    padding-left: 18px;
+}
+
+.task-fact::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--text-tertiary);
+}
+
+.task-reasoning {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    padding-left: 16px;
+    border-left: 2px solid var(--border);
+    font-style: italic;
 }
 
 .scrum-item {
@@ -577,29 +630,33 @@ body {
     font-size: 12px;
 }
 
-/* ===== Cognitive Flow 패널 ===== */
+/* ===== Cognitive Flow 패널 (Side Panel) ===== */
 .cognitive-flow-panel {
     display: none;
-    margin-top: 16px;
+    flex: 0 0 320px;
+    max-width: 320px;
     padding: 20px;
     background: linear-gradient(145deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
     border: 1px solid rgba(102, 126, 234, 0.15);
     border-radius: 12px;
-    animation: fadeSlideDown 0.3s ease;
+    animation: fadeSlideRight 0.3s ease;
+    height: fit-content;
+    position: sticky;
+    top: 20px;
 }
 
 .cognitive-flow-panel.visible {
     display: block;
 }
 
-@keyframes fadeSlideDown {
+@keyframes fadeSlideRight {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateX(20px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(0);
     }
 }
 
@@ -765,6 +822,35 @@ body {
         justify-content: center;
     }
 
+    /* Mobile: Content wrapper stacks vertically */
+    .section-content-wrapper {
+        flex-direction: column;
+    }
+
+    .section-content-wrapper.expanded {
+        flex-direction: column;
+    }
+
+    /* Mobile: Task row stacks vertically */
+    .task-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .task-reasoning {
+        border-left: none;
+        padding-left: 18px;
+        border-top: 1px dashed var(--border);
+        padding-top: 8px;
+    }
+
+    /* Mobile: Cognitive Flow panel full width below */
+    .cognitive-flow-panel {
+        flex: none;
+        max-width: 100%;
+        margin-top: 16px;
+    }
+
     /* Mobile: Flow diagram */
     .flow-diagram {
         flex-wrap: wrap;
@@ -831,5 +917,14 @@ body {
 
     .point-insight {
         background: rgba(255, 215, 0, 0.15);
+    }
+
+    /* Dark mode: Task row */
+    .task-row {
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .task-reasoning {
+        border-left-color: rgba(255, 255, 255, 0.1);
     }
 }
