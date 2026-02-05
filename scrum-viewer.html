@@ -53,6 +53,23 @@
         <button class="generate-btn" id="generateBtn">보고서 생성</button>
     </div>
 
+    <!-- Cognitive Flow 오버레이 -->
+    <div class="cf-overlay" id="cfOverlay">
+        <div class="cf-overlay-backdrop" id="cfOverlayBackdrop"></div>
+        <div class="cf-overlay-panel" id="cfOverlayPanel">
+            <div class="cf-overlay-header">
+                <div class="cf-overlay-title">
+                    <span class="cf-title-icon">🧠</span>
+                    <span>Cognitive Flow</span>
+                </div>
+                <button class="cf-overlay-close" id="cfOverlayClose">✕</button>
+            </div>
+            <div class="cf-overlay-content" id="cfOverlayContent">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
     <!-- 플로팅 컨트롤 -->
     <div class="floating-controls" id="floatingControls">
         <input type="date" id="datePicker" class="date-picker">
