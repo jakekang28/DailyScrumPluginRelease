@@ -221,44 +221,82 @@ body {
     padding-left: 30px;
 }
 
-/* Task row: horizontal flex (fact | reasoning) */
-.task-row {
+/* Task Accordion */
+.task-accordion {
+    margin-bottom: 4px;
+}
+
+.task-fact-header {
     display: flex;
-    gap: 20px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    opacity: 0;
-    animation: itemSlideIn 0.4s ease forwards;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s;
 }
 
-.task-row:last-child {
-    border-bottom: none;
+.task-fact-header:hover {
+    background: var(--bg-secondary);
 }
 
-.task-fact {
+.task-fact-text {
     flex: 1;
     font-size: 15px;
     color: var(--text-primary);
-    line-height: 1.7;
+    line-height: 1.6;
     position: relative;
     padding-left: 18px;
 }
 
-.task-fact::before {
+.task-fact-text::before {
     content: '•';
     position: absolute;
     left: 0;
     color: var(--text-tertiary);
 }
 
-.task-reasoning {
-    flex: 1;
+.task-expand-btn {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
+.task-expand-btn .expand-arrow {
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.task-expand-btn.expanded .expand-arrow {
+    transform: rotate(180deg);
+}
+
+.task-reasoning-panel {
     font-size: 14px;
     color: var(--text-secondary);
-    line-height: 1.7;
-    padding-left: 16px;
-    border-left: 2px solid var(--border);
     font-style: italic;
+    padding: 0 12px 0 42px;
+    overflow: hidden;
+    transition: max-height 0.3s, opacity 0.2s, padding 0.3s;
+    line-height: 1.6;
+}
+
+.task-reasoning-panel.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.task-reasoning-panel.expanded {
+    max-height: 300px;
+    opacity: 1;
+    padding-top: 4px;
+    padding-bottom: 12px;
 }
 
 .scrum-item {
@@ -617,7 +655,7 @@ body {
     background: linear-gradient(90deg, #10b981, #059669);
 }
 
-/* ===== Cognitive Flow 버튼 ===== */
+/* ===== Workflow Map 버튼 ===== */
 .cognitive-flow-btn {
     margin-left: auto;
     padding: 6px 12px;
@@ -634,6 +672,8 @@ body {
     gap: 6px;
     transition: all 0.2s ease;
     opacity: 0.85;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .cognitive-flow-btn:hover {
@@ -843,6 +883,79 @@ body {
     font-style: italic;
 }
 
+/* ===== Cognitive Flow Timeline (Enhanced) ===== */
+.cf-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.cf-source-group {
+    position: relative;
+}
+
+.cf-source-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+    font-weight: 600;
+}
+
+.cf-source-icon { font-size: 18px; }
+.cf-source-name { color: var(--gradient-start); }
+.cf-source-time {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-left: auto;
+}
+
+.cf-source-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-left: 28px;
+}
+
+.cf-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Fact: blue */
+.cf-item-fact {
+    background: #e3f2fd;
+    border-left: 3px solid #1976d2;
+}
+
+/* Reasoning: purple */
+.cf-item-reasoning {
+    background: #f3e5f5;
+    border-left: 3px solid #7b1fa2;
+}
+
+/* Citation: gray */
+.cf-item-citation {
+    background: #f5f5f5;
+    border-left: 3px solid #9e9e9e;
+    font-style: italic;
+}
+
+.cf-item-icon { flex-shrink: 0; }
+.cf-item-content { flex: 1; }
+
+.cf-connector {
+    text-align: center;
+    color: var(--text-tertiary);
+    padding: 8px 0;
+    font-size: 16px;
+}
+
 /* ===== 반응형 ===== */
 @media (max-width: 768px) {
     .scrum-container {
@@ -907,17 +1020,28 @@ body {
         justify-content: center;
     }
 
-    /* Mobile: Task row stacks vertically */
-    .task-row {
-        flex-direction: column;
-        gap: 8px;
+    /* Mobile: Task accordion */
+    .task-fact-header {
+        padding: 8px 10px;
     }
 
-    .task-reasoning {
-        border-left: none;
-        padding-left: 18px;
-        border-top: 1px dashed var(--border);
-        padding-top: 8px;
+    .task-fact-text {
+        font-size: 14px;
+    }
+
+    .task-reasoning-panel {
+        padding-left: 30px;
+        font-size: 13px;
+    }
+
+    /* Mobile: Cognitive Flow timeline */
+    .cf-source-items {
+        padding-left: 16px;
+    }
+
+    .cf-item {
+        padding: 8px 10px;
+        font-size: 13px;
     }
 
     /* Mobile: Cognitive Flow overlay full width */
@@ -1007,12 +1131,21 @@ body {
         background: rgba(255, 215, 0, 0.15);
     }
 
-    /* Dark mode: Task row */
-    .task-row {
-        border-bottom-color: rgba(255, 255, 255, 0.1);
+    /* Dark mode: Cognitive Flow Timeline */
+    .cf-item-fact {
+        background: rgba(25, 118, 210, 0.15);
     }
 
-    .task-reasoning {
-        border-left-color: rgba(255, 255, 255, 0.1);
+    .cf-item-reasoning {
+        background: rgba(123, 31, 162, 0.15);
+    }
+
+    .cf-item-citation {
+        background: rgba(158, 158, 158, 0.15);
+    }
+
+    /* Dark mode: Task accordion */
+    .task-fact-header:hover {
+        background: var(--bg-secondary);
     }
 }
