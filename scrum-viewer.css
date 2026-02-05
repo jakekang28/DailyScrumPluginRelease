@@ -496,6 +496,211 @@ body {
     transform: none !important;
 }
 
+/* ===== Sync 버튼 ===== */
+.control-btn.sync {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+}
+
+.control-btn.sync:hover {
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+    transform: translateY(-1px);
+}
+
+.control-btn.sync:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.control-btn.sync.hidden {
+    display: none;
+}
+
+.sync-icon {
+    font-size: 14px;
+    display: inline-block;
+}
+
+.control-btn.sync:not(:disabled) .sync-icon {
+    animation: spin 2s linear infinite;
+    animation-play-state: paused;
+}
+
+.control-btn.sync:disabled .sync-icon {
+    animation-play-state: running;
+}
+
+.sync-status {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* ===== Cognitive Flow 버튼 ===== */
+.cognitive-flow-btn {
+    margin-left: auto;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    opacity: 0.85;
+}
+
+.cognitive-flow-btn:hover {
+    opacity: 1;
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.cognitive-flow-btn.active {
+    opacity: 1;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.cf-icon {
+    font-size: 14px;
+}
+
+.cf-text {
+    font-size: 12px;
+}
+
+/* ===== Cognitive Flow 패널 ===== */
+.cognitive-flow-panel {
+    display: none;
+    margin-top: 16px;
+    padding: 20px;
+    background: linear-gradient(145deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.15);
+    border-radius: 12px;
+    animation: fadeSlideDown 0.3s ease;
+}
+
+.cognitive-flow-panel.visible {
+    display: block;
+}
+
+@keyframes fadeSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cf-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+}
+
+.cf-title-icon {
+    font-size: 18px;
+}
+
+.cf-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ===== Flow Diagram ===== */
+.flow-diagram {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+}
+
+.flow-domain {
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.flow-arrow {
+    color: var(--text-tertiary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* ===== Flow Points ===== */
+.flow-points {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.flow-point {
+    padding-left: 12px;
+    border-left: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.point-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.6;
+}
+
+.point-domain {
+    color: var(--gradient-start);
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.point-thought {
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.point-insight {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 8px 12px;
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: 6px;
+    border-left: 2px solid #f5a623;
+}
+
+.insight-icon {
+    font-size: 14px;
+}
+
+.insight-text {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-style: italic;
+}
+
 /* ===== 반응형 ===== */
 @media (max-width: 768px) {
     .scrum-container {
@@ -546,6 +751,34 @@ body {
         flex: 1;
         min-width: 120px;
     }
+
+    /* Mobile: Section header with Cognitive Flow button */
+    .section-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .cognitive-flow-btn {
+        margin-left: 0;
+        margin-top: 8px;
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Mobile: Flow diagram */
+    .flow-diagram {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .flow-point .point-main {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .point-domain {
+        margin-bottom: 2px;
+    }
 }
 
 /* ===== 다크모드 지원 (선택사항) ===== */
@@ -584,5 +817,19 @@ body {
     .error-screen,
     .empty-screen {
         background: var(--bg-primary);
+    }
+
+    /* Dark mode: Cognitive Flow panel */
+    .cognitive-flow-panel {
+        background: linear-gradient(145deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-color: rgba(102, 126, 234, 0.25);
+    }
+
+    .flow-diagram {
+        background: rgba(30, 30, 30, 0.5);
+    }
+
+    .point-insight {
+        background: rgba(255, 215, 0, 0.15);
     }
 }
