@@ -132,6 +132,17 @@
       // Flush 타이머 (30초)
       this._flushTimer = setInterval(() => this.flush(), FLUSH_INTERVAL);
 
+      // FLUSH_NOW 메시지 리스너 (background에서 강제 flush 요청)
+      if (this._hasChromeAPI) {
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+          if (message.action === 'FLUSH_NOW') {
+            this.flush();
+            sendResponse({ success: true });
+          }
+          return true;
+        });
+      }
+
       // Cleanup 핸들러
       window.addEventListener('beforeunload', () => this.cleanup());
       window.addEventListener('pagehide', () => this.cleanup());

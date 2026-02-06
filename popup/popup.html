@@ -179,9 +179,26 @@
       </div>
     </section>
 
+    <!-- 수집 컨트롤 -->
+    <section class="collection-controls-section">
+      <div class="control-row">
+        <button id="toggle-collection-btn" class="btn btn-collection">
+          <span id="toggle-icon">▶</span>
+          <span id="toggle-text">시작</span>
+        </button>
+        <button id="generate-btn" class="btn btn-primary" disabled>Generate</button>
+      </div>
+      <div class="collection-status-bar" id="collectionStatusBar">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">수집 대기 중</span>
+      </div>
+    </section>
+
+    <div class="actions-divider"></div>
+
     <!-- 액션 버튼 -->
     <section class="actions-section">
-      <button id="view-scrum-btn" class="btn btn-primary">Daily Scrum 보기</button>
+      <button id="view-scrum-btn" class="btn btn-secondary">Daily Scrum 보기</button>
       <button id="logout-btn" class="btn btn-secondary">로그아웃</button>
     </section>
   </div>
