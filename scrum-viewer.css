@@ -197,7 +197,152 @@ body {
 .scrum-time-range {
     font-size: 14px;
     color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/* Tab Navigation */
+.scrum-tabs-container {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 10;
+}
+
+.scrum-tabs {
+    display: flex;
+    gap: 8px;
+    background: var(--bg-secondary);
+    padding: 4px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.scrum-tab {
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.scrum-tab:hover {
+    background: rgba(55, 53, 47, 0.06);
+    color: var(--text-primary);
+}
+
+.scrum-tab.active {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.scrum-tab-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.scrum-tab-icon {
+    font-size: 14px;
+}
+
+/* Header Layout Update */
+.scrum-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 48px;
+    position: relative;
+}
+
+.scrum-header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.scrum-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.scrum-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Regenerate Button (in header) */
+.scrum-regenerate-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.scrum-regenerate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.scrum-regenerate-btn:active {
+    transform: translateY(0);
+}
+
+.scrum-regenerate-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.regenerate-icon {
+    font-size: 16px;
+    animation: none;
+}
+
+.scrum-regenerate-btn:disabled .regenerate-icon {
+    animation: none;
+}
+
+/* Regeneration Count Display */
+.regenerate-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.count-remaining {
+    color: var(--accent);
+    font-size: 15px;
+}
+
+.count-remaining.warning {
+    color: #f59e0b; /* Orange */
+}
+
+.count-remaining.danger {
+    color: #ef4444; /* Red */
 }
 
 .scrum-section {
@@ -1151,6 +1296,25 @@ body {
 
 /* ===== 반응형 ===== */
 @media (max-width: 768px) {
+    .scrum-tabs-container {
+        position: static;
+        margin-bottom: 16px;
+    }
+
+    .scrum-tabs {
+        flex-wrap: wrap;
+    }
+
+    .scrum-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .scrum-header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+
     .scrum-container {
         padding: 48px 24px;
         padding-bottom: 100px;

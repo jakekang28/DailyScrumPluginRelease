@@ -28,10 +28,32 @@
 
     <!-- Daily Scrum 결과 -->
     <div class="scrum-container" id="scrumContainer">
-        <div class="scrum-icon">📋</div>
-        <h1 class="scrum-title">Daily Scrum</h1>
-        <div class="scrum-date" id="scrumDate"></div>
-        <div class="scrum-time-range" id="scrumTimeRange"></div>
+        <!-- Tab Navigation (shown when multiple scrums exist for same date) -->
+        <div class="scrum-tabs-container" id="scrumTabsContainer" style="display: none;">
+            <div class="scrum-tabs" id="scrumTabs">
+                <!-- Tabs generated dynamically by JavaScript -->
+            </div>
+        </div>
+
+        <div class="scrum-header">
+            <div class="scrum-header-left">
+                <div class="scrum-icon">📋</div>
+                <div class="scrum-header-info">
+                    <h1 class="scrum-title">Daily Scrum</h1>
+                    <div class="scrum-date" id="scrumDate"></div>
+                    <div class="scrum-time-range" id="scrumTimeRange"></div>
+                </div>
+            </div>
+            <div class="scrum-header-right">
+                <div class="regenerate-count" id="regenerateCount">
+                    <span class="count-remaining" id="countRemaining">5</span>/5
+                </div>
+                <button class="scrum-regenerate-btn" id="scrumRegenerateBtn">
+                    <span class="regenerate-icon">🔄</span>
+                    <span class="regenerate-text">Regenerate</span>
+                </button>
+            </div>
+        </div>
 
         <div id="scrumContent">
             <!-- 동적으로 생성됨 -->
@@ -84,7 +106,6 @@
                 <div class="sync-progress-fill" id="syncProgressFill"></div>
             </div>
         </div>
-        <button class="control-btn primary" id="generateBtnMain">Re-generate</button>
     </div>
 
     <script type="module" src="scrum-viewer.bundle.js"></script>
