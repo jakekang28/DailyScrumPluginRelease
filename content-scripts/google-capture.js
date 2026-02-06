@@ -13,6 +13,58 @@
   'use strict';
 
   // ============================================================================
+  // 전역 인스턴스 관리 (Extension Reload 대응)
+  // ============================================================================
+
+  const SCRIPT_ID = '__DAILY_SCRUM_GOOGLE_CAPTURE__';
+
+  // 기존 인스턴스가 있으면 cleanup (확장프로그램 리로드 시)
+  if (window[SCRIPT_ID]) {
+    try {
+      window[SCRIPT_ID].cleanup();
+    } catch (e) {
+      // 이전 인스턴스 cleanup 실패 무시
+    }
+  }
+
+  /**
+   * Extension context 유효성 검사
+   * @returns {boolean} context가 유효하면 true
+   */
+  function isContextValid() {
+    try {
+      return !!(chrome && chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Service Worker 준비 대기 후 메시지 전송 (Race Condition 방지)
+   * @param {Object} message - 전송할 메시지
+   * @param {number} maxRetries - 최대 재시도 횟수
+   * @returns {Promise<any>} 응답
+   */
+  async function sendMessageWithRetry(message, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await chrome.runtime.sendMessage(message);
+      } catch (error) {
+        const errorMsg = error.message || '';
+        if (errorMsg.includes('context invalidated') ||
+            errorMsg.includes('Receiving end does not exist')) {
+          // Service worker가 아직 준비 안됨 - 대기 후 재시도
+          await new Promise(r => setTimeout(r, 100 * (i + 1)));
+          continue;
+        }
+        throw error;
+      }
+    }
+    // 모든 재시도 실패 시 조용히 실패
+    return null;
+  }
+
+  // ============================================================================
   // 유틸리티 함수
   // ============================================================================
 
@@ -90,6 +142,7 @@
   // ============================================================================
 
   let docsObserver = null;
+  let docsIntervalId = null;
   let lastDocsCapture = 0;
   const DOCS_CAPTURE_INTERVAL = 30000; // 30초
 
@@ -98,6 +151,12 @@
    */
   async function captureGoogleDocsActivity() {
     try {
+      // Context 유효성 검사 (확장프로그램 리로드 대응)
+      if (!isContextValid()) {
+        cleanup();
+        return;
+      }
+
       // 탭이 숨겨져 있으면 수집 스킵
       if (document.hidden) return;
 
@@ -116,7 +175,7 @@
                        document.querySelector('.docs-text-ui-cursor-blink') !== null;
 
       // Background에 Google API 요청
-      const response = await chrome.runtime.sendMessage({
+      const response = await sendMessageWithRetry({
         action: 'GOOGLE_API_REQUEST',
         payload: {
           apiType: 'docs',
@@ -124,9 +183,9 @@
         }
       });
 
-      if (response.success) {
+      if (response && response.success) {
         // API에서 가져온 텍스트로 데이터 캡처
-        chrome.runtime.sendMessage({
+        sendMessageWithRetry({
           action: 'DATA_CAPTURED',
           payload: {
             type: 'DAILY_SCRUM_CAPTURE',
@@ -140,7 +199,7 @@
               url: window.location.href
             }
           }
-        }).catch(error => {
+        }).catch(() => {
         });
       } else {
       }
@@ -155,7 +214,7 @@
    */
   function setupDocsCapture() {
     // 주기적 캡처 (30초마다)
-    setInterval(captureGoogleDocsActivity, DOCS_CAPTURE_INTERVAL);
+    docsIntervalId = setInterval(captureGoogleDocsActivity, DOCS_CAPTURE_INTERVAL);
 
     // 초기 캡처
     setTimeout(captureGoogleDocsActivity, 3000);
@@ -167,6 +226,7 @@
   // ============================================================================
 
   let sheetsObserver = null;
+  let sheetsIntervalId = null;
   let lastSheetsCapture = 0;
   const SHEETS_CAPTURE_INTERVAL = 30000; // 30초
 
@@ -175,6 +235,12 @@
    */
   async function captureGoogleSheetsActivity() {
     try {
+      // Context 유효성 검사 (확장프로그램 리로드 대응)
+      if (!isContextValid()) {
+        cleanup();
+        return;
+      }
+
       // 탭이 숨겨져 있으면 수집 스킵
       if (document.hidden) return;
 
@@ -198,7 +264,7 @@
                        document.querySelector('[aria-label*="Formula bar"]') !== null;
 
       // Background에 Google API 요청
-      const response = await chrome.runtime.sendMessage({
+      const response = await sendMessageWithRetry({
         action: 'GOOGLE_API_REQUEST',
         payload: {
           apiType: 'sheets',
@@ -206,8 +272,8 @@
         }
       });
 
-      if (response.success) {
-        chrome.runtime.sendMessage({
+      if (response && response.success) {
+        sendMessageWithRetry({
           action: 'DATA_CAPTURED',
           payload: {
             type: 'DAILY_SCRUM_CAPTURE',
@@ -222,7 +288,7 @@
               url: window.location.href
             }
           }
-        }).catch(error => {
+        }).catch(() => {
         });
       } else {
       }
@@ -237,7 +303,7 @@
    */
   function setupSheetsCapture() {
     // 주기적 캡처 (30초마다)
-    setInterval(captureGoogleSheetsActivity, SHEETS_CAPTURE_INTERVAL);
+    sheetsIntervalId = setInterval(captureGoogleSheetsActivity, SHEETS_CAPTURE_INTERVAL);
 
     // 초기 캡처
     setTimeout(captureGoogleSheetsActivity, 3000);
@@ -249,6 +315,7 @@
   // ============================================================================
 
   let slidesObserver = null;
+  let slidesIntervalId = null;
   let lastSlidesCapture = 0;
   const SLIDES_CAPTURE_INTERVAL = 30000; // 30초
 
@@ -257,6 +324,12 @@
    */
   async function captureGoogleSlidesActivity() {
     try {
+      // Context 유효성 검사 (확장프로그램 리로드 대응)
+      if (!isContextValid()) {
+        cleanup();
+        return;
+      }
+
       // 탭이 숨겨져 있으면 수집 스킵
       if (document.hidden) return;
 
@@ -284,7 +357,7 @@
       const isEditing = document.querySelector('.punch-viewer-container.punch-present-active') === null;
 
       // Background에 Google API 요청
-      const response = await chrome.runtime.sendMessage({
+      const response = await sendMessageWithRetry({
         action: 'GOOGLE_API_REQUEST',
         payload: {
           apiType: 'slides',
@@ -292,8 +365,8 @@
         }
       });
 
-      if (response.success) {
-        chrome.runtime.sendMessage({
+      if (response && response.success) {
+        sendMessageWithRetry({
           action: 'DATA_CAPTURED',
           payload: {
             type: 'DAILY_SCRUM_CAPTURE',
@@ -311,7 +384,7 @@
               url: window.location.href
             }
           }
-        }).catch(error => {
+        }).catch(() => {
         });
       } else {
       }
@@ -326,7 +399,7 @@
    */
   function setupSlidesCapture() {
     // 주기적 캡처 (30초마다)
-    setInterval(captureGoogleSlidesActivity, SLIDES_CAPTURE_INTERVAL);
+    slidesIntervalId = setInterval(captureGoogleSlidesActivity, SLIDES_CAPTURE_INTERVAL);
 
     // 초기 캡처
     setTimeout(captureGoogleSlidesActivity, 3000);
@@ -390,7 +463,7 @@
     try {
       if (processedDriveActions.has(activityType)) return;
 
-      chrome.runtime.sendMessage({
+      sendMessageWithRetry({
         action: 'DATA_CAPTURED',
         payload: {
           type: 'DAILY_SCRUM_CAPTURE',
@@ -401,7 +474,7 @@
             url: window.location.href
           }
         }
-      }).catch(error => {
+      }).catch(() => {
       });
 
       processedDriveActions.add(activityType);
@@ -423,6 +496,21 @@
    */
   function cleanup() {
     try {
+      // 타이머 정리
+      if (docsIntervalId) {
+        clearInterval(docsIntervalId);
+        docsIntervalId = null;
+      }
+      if (sheetsIntervalId) {
+        clearInterval(sheetsIntervalId);
+        sheetsIntervalId = null;
+      }
+      if (slidesIntervalId) {
+        clearInterval(slidesIntervalId);
+        slidesIntervalId = null;
+      }
+
+      // Observer 정리
       if (docsObserver) {
         docsObserver.disconnect();
         docsObserver = null;
@@ -488,5 +576,8 @@
   } else {
     init();
   }
+
+  // 전역에 cleanup 함수 노출 (다음 리로드 시 cleanup 가능하도록)
+  window[SCRIPT_ID] = { cleanup };
 
 })();

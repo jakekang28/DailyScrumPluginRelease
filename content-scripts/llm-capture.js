@@ -10,6 +10,58 @@
   'use strict';
 
   // ============================================================================
+  // 전역 인스턴스 관리 (Extension Reload 대응)
+  // ============================================================================
+
+  const SCRIPT_ID = '__DAILY_SCRUM_LLM_CAPTURE__';
+
+  // 기존 인스턴스가 있으면 cleanup (확장프로그램 리로드 시)
+  if (window[SCRIPT_ID]) {
+    try {
+      window[SCRIPT_ID].cleanup();
+    } catch (e) {
+      // 이전 인스턴스 cleanup 실패 무시
+    }
+  }
+
+  /**
+   * Extension context 유효성 검사
+   * @returns {boolean} context가 유효하면 true
+   */
+  function isContextValid() {
+    try {
+      return !!(chrome && chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Service Worker 준비 대기 후 메시지 전송 (Race Condition 방지)
+   * @param {Object} message - 전송할 메시지
+   * @param {number} maxRetries - 최대 재시도 횟수
+   * @returns {Promise<any>} 응답
+   */
+  async function sendMessageWithRetry(message, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await chrome.runtime.sendMessage(message);
+      } catch (error) {
+        const errorMsg = error.message || '';
+        if (errorMsg.includes('context invalidated') ||
+            errorMsg.includes('Receiving end does not exist')) {
+          // Service worker가 아직 준비 안됨 - 대기 후 재시도
+          await new Promise(r => setTimeout(r, 100 * (i + 1)));
+          continue;
+        }
+        throw error;
+      }
+    }
+    // 모든 재시도 실패 시 조용히 실패
+    return null;
+  }
+
+  // ============================================================================
   // 플랫폼별 셀렉터 설정
   // ============================================================================
 
@@ -248,6 +300,12 @@
    * @param {object} conversation - {query, answer}
    */
   function sendConversation(conversation) {
+    // Context 유효성 검사 (확장프로그램 리로드 대응)
+    if (!isContextValid()) {
+      cleanup();
+      return;
+    }
+
     // 탭이 숨겨져 있으면 수집 스킵
     if (document.hidden) return;
 
@@ -274,7 +332,7 @@
     };
 
     try {
-      chrome.runtime.sendMessage({
+      sendMessageWithRetry({
         action: 'DATA_CAPTURED',
         payload: payload
       }).catch(() => {
@@ -468,5 +526,8 @@
   } else {
     init();
   }
+
+  // 전역에 cleanup 함수 노출 (다음 리로드 시 cleanup 가능하도록)
+  window[SCRIPT_ID] = { cleanup };
 
 })();
