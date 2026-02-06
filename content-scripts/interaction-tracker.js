@@ -10,6 +10,33 @@
   'use strict';
 
   // ============================================================================
+  // 전역 인스턴스 관리 (Extension Reload 대응)
+  // ============================================================================
+
+  const SCRIPT_ID = '__DAILY_SCRUM_INTERACTION_TRACKER__';
+
+  // 기존 인스턴스가 있으면 cleanup (확장프로그램 리로드 시)
+  if (window[SCRIPT_ID]) {
+    try {
+      window[SCRIPT_ID].cleanup();
+    } catch (e) {
+      // 이전 인스턴스 cleanup 실패 무시
+    }
+  }
+
+  /**
+   * Extension context 유효성 검사
+   * @returns {boolean} context가 유효하면 true
+   */
+  function isContextValid() {
+    try {
+      return !!(chrome && chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ============================================================================
   // 상수
   // ============================================================================
 
@@ -132,6 +159,17 @@
       // Flush 타이머 (30초)
       this._flushTimer = setInterval(() => this.flush(), FLUSH_INTERVAL);
 
+      // FLUSH_NOW 메시지 리스너 (background에서 강제 flush 요청)
+      if (this._hasChromeAPI) {
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+          if (message.action === 'FLUSH_NOW') {
+            this.flush();
+            sendResponse({ success: true });
+          }
+          return true;
+        });
+      }
+
       // Cleanup 핸들러
       window.addEventListener('beforeunload', () => this.cleanup());
       window.addEventListener('pagehide', () => this.cleanup());
@@ -228,6 +266,12 @@
     }
 
     _handleVisibilityChange() {
+      // Context 유효성 검사
+      if (!isContextValid()) {
+        this.cleanup();
+        return;
+      }
+
       const hostname = window.location.hostname;
       const now = Date.now();
 
@@ -396,6 +440,12 @@
     // ============================================================================
 
     flush() {
+      // Context 유효성 검사 (확장프로그램 리로드 대응)
+      if (!isContextValid()) {
+        this.cleanup();
+        return;
+      }
+
       // 데이터가 없으면 스킵
       if (!this._hasData()) {
         this._resetBuffer();
@@ -520,6 +570,9 @@
     try {
       tracker = new InteractionTracker();
       tracker.init();
+
+      // 전역에 인스턴스 노출 (다음 리로드 시 cleanup 가능하도록)
+      window[SCRIPT_ID] = tracker;
     } catch (error) {
       console.error('[Daily Scrum] InteractionTracker initialization error:', error);
     }

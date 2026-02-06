@@ -11,6 +11,33 @@
   'use strict';
 
   // ============================================================================
+  // 전역 인스턴스 관리 (Extension Reload 대응)
+  // ============================================================================
+
+  const SCRIPT_ID = '__DAILY_SCRUM_COLLAB_CAPTURE__';
+
+  // 기존 인스턴스가 있으면 cleanup (확장프로그램 리로드 시)
+  if (window[SCRIPT_ID]) {
+    try {
+      window[SCRIPT_ID].cleanup();
+    } catch (e) {
+      // 이전 인스턴스 cleanup 실패 무시
+    }
+  }
+
+  /**
+   * Extension context 유효성 검사
+   * @returns {boolean} context가 유효하면 true
+   */
+  function isContextValid() {
+    try {
+      return !!(chrome && chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ============================================================================
   // 유틸리티 함수
   // ============================================================================
 
@@ -164,6 +191,12 @@
    */
   const debouncedSendNotionData = debounce(() => {
     try {
+      // Context 유효성 검사 (확장프로그램 리로드 대응)
+      if (!isContextValid()) {
+        cleanup();
+        return;
+      }
+
       // 탭이 숨겨져 있으면 수집 스킵
       if (document.hidden) return;
 
@@ -240,6 +273,12 @@
    */
   function extractSlackMessage(messageContainer) {
     try {
+      // Context 유효성 검사 (확장프로그램 리로드 대응)
+      if (!isContextValid()) {
+        cleanup();
+        return;
+      }
+
       // 탭이 숨겨져 있으면 수집 스킵
       if (document.hidden) return;
 
@@ -379,5 +418,8 @@
   } else {
     init();
   }
+
+  // 전역에 cleanup 함수 노출 (다음 리로드 시 cleanup 가능하도록)
+  window[SCRIPT_ID] = { cleanup };
 
 })();

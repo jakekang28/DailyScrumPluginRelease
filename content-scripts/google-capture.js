@@ -13,6 +13,33 @@
   'use strict';
 
   // ============================================================================
+  // 전역 인스턴스 관리 (Extension Reload 대응)
+  // ============================================================================
+
+  const SCRIPT_ID = '__DAILY_SCRUM_GOOGLE_CAPTURE__';
+
+  // 기존 인스턴스가 있으면 cleanup (확장프로그램 리로드 시)
+  if (window[SCRIPT_ID]) {
+    try {
+      window[SCRIPT_ID].cleanup();
+    } catch (e) {
+      // 이전 인스턴스 cleanup 실패 무시
+    }
+  }
+
+  /**
+   * Extension context 유효성 검사
+   * @returns {boolean} context가 유효하면 true
+   */
+  function isContextValid() {
+    try {
+      return !!(chrome && chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ============================================================================
   // 유틸리티 함수
   // ============================================================================
 
@@ -90,6 +117,7 @@
   // ============================================================================
 
   let docsObserver = null;
+  let docsIntervalId = null;
   let lastDocsCapture = 0;
   const DOCS_CAPTURE_INTERVAL = 30000; // 30초
 
@@ -98,6 +126,12 @@
    */
   async function captureGoogleDocsActivity() {
     try {
+      // Context 유효성 검사 (확장프로그램 리로드 대응)
+      if (!isContextValid()) {
+        cleanup();
+        return;
+      }
+
       // 탭이 숨겨져 있으면 수집 스킵
       if (document.hidden) return;
 
@@ -155,7 +189,7 @@
    */
   function setupDocsCapture() {
     // 주기적 캡처 (30초마다)
-    setInterval(captureGoogleDocsActivity, DOCS_CAPTURE_INTERVAL);
+    docsIntervalId = setInterval(captureGoogleDocsActivity, DOCS_CAPTURE_INTERVAL);
 
     // 초기 캡처
     setTimeout(captureGoogleDocsActivity, 3000);
@@ -167,6 +201,7 @@
   // ============================================================================
 
   let sheetsObserver = null;
+  let sheetsIntervalId = null;
   let lastSheetsCapture = 0;
   const SHEETS_CAPTURE_INTERVAL = 30000; // 30초
 
@@ -175,6 +210,12 @@
    */
   async function captureGoogleSheetsActivity() {
     try {
+      // Context 유효성 검사 (확장프로그램 리로드 대응)
+      if (!isContextValid()) {
+        cleanup();
+        return;
+      }
+
       // 탭이 숨겨져 있으면 수집 스킵
       if (document.hidden) return;
 
@@ -237,7 +278,7 @@
    */
   function setupSheetsCapture() {
     // 주기적 캡처 (30초마다)
-    setInterval(captureGoogleSheetsActivity, SHEETS_CAPTURE_INTERVAL);
+    sheetsIntervalId = setInterval(captureGoogleSheetsActivity, SHEETS_CAPTURE_INTERVAL);
 
     // 초기 캡처
     setTimeout(captureGoogleSheetsActivity, 3000);
@@ -249,6 +290,7 @@
   // ============================================================================
 
   let slidesObserver = null;
+  let slidesIntervalId = null;
   let lastSlidesCapture = 0;
   const SLIDES_CAPTURE_INTERVAL = 30000; // 30초
 
@@ -257,6 +299,12 @@
    */
   async function captureGoogleSlidesActivity() {
     try {
+      // Context 유효성 검사 (확장프로그램 리로드 대응)
+      if (!isContextValid()) {
+        cleanup();
+        return;
+      }
+
       // 탭이 숨겨져 있으면 수집 스킵
       if (document.hidden) return;
 
@@ -326,7 +374,7 @@
    */
   function setupSlidesCapture() {
     // 주기적 캡처 (30초마다)
-    setInterval(captureGoogleSlidesActivity, SLIDES_CAPTURE_INTERVAL);
+    slidesIntervalId = setInterval(captureGoogleSlidesActivity, SLIDES_CAPTURE_INTERVAL);
 
     // 초기 캡처
     setTimeout(captureGoogleSlidesActivity, 3000);
@@ -423,6 +471,21 @@
    */
   function cleanup() {
     try {
+      // 타이머 정리
+      if (docsIntervalId) {
+        clearInterval(docsIntervalId);
+        docsIntervalId = null;
+      }
+      if (sheetsIntervalId) {
+        clearInterval(sheetsIntervalId);
+        sheetsIntervalId = null;
+      }
+      if (slidesIntervalId) {
+        clearInterval(slidesIntervalId);
+        slidesIntervalId = null;
+      }
+
+      // Observer 정리
       if (docsObserver) {
         docsObserver.disconnect();
         docsObserver = null;
@@ -488,5 +551,8 @@
   } else {
     init();
   }
+
+  // 전역에 cleanup 함수 노출 (다음 리로드 시 cleanup 가능하도록)
+  window[SCRIPT_ID] = { cleanup };
 
 })();

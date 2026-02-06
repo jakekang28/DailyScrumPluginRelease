@@ -191,6 +191,12 @@ body {
 .scrum-date {
     font-size: 14px;
     color: var(--text-tertiary);
+    margin-bottom: 8px;
+}
+
+.scrum-time-range {
+    font-size: 14px;
+    color: var(--text-secondary);
     margin-bottom: 48px;
 }
 
