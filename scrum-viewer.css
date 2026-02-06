@@ -197,7 +197,152 @@ body {
 .scrum-time-range {
     font-size: 14px;
     color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/* Tab Navigation */
+.scrum-tabs-container {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 10;
+}
+
+.scrum-tabs {
+    display: flex;
+    gap: 8px;
+    background: var(--bg-secondary);
+    padding: 4px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.scrum-tab {
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.scrum-tab:hover {
+    background: rgba(55, 53, 47, 0.06);
+    color: var(--text-primary);
+}
+
+.scrum-tab.active {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.scrum-tab-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.scrum-tab-icon {
+    font-size: 14px;
+}
+
+/* Header Layout Update */
+.scrum-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 48px;
+    position: relative;
+}
+
+.scrum-header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.scrum-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.scrum-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Regenerate Button (in header) */
+.scrum-regenerate-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.scrum-regenerate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.scrum-regenerate-btn:active {
+    transform: translateY(0);
+}
+
+.scrum-regenerate-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.regenerate-icon {
+    font-size: 16px;
+    animation: none;
+}
+
+.scrum-regenerate-btn:disabled .regenerate-icon {
+    animation: none;
+}
+
+/* Regeneration Count Display */
+.regenerate-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.count-remaining {
+    color: var(--accent);
+    font-size: 15px;
+}
+
+.count-remaining.warning {
+    color: #f59e0b; /* Orange */
+}
+
+.count-remaining.danger {
+    color: #ef4444; /* Red */
 }
 
 .scrum-section {
@@ -303,6 +448,193 @@ body {
     opacity: 1;
     padding-top: 4px;
     padding-bottom: 12px;
+}
+
+/* ========================================
+   Two-Level Accordion (Task Summary → Facts)
+   ======================================== */
+
+.task-group {
+    margin-bottom: 12px;
+    animation: itemSlideIn 0.4s ease forwards;
+    opacity: 0;
+}
+
+/* Task Summary Header */
+.task-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    border: 1.5px solid rgba(102, 126, 234, 0.2);
+    transition: all 0.2s ease;
+}
+
+.task-summary-header:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+    border-color: rgba(102, 126, 234, 0.35);
+    transform: translateX(4px);
+}
+
+.task-summary-text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.task-expand-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+}
+
+.task-expand-btn:hover {
+    color: var(--primary);
+}
+
+.expand-arrow {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+/* Facts Panel (Collapsible) */
+.task-facts-panel {
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s ease,
+                padding 0.35s ease;
+    margin-top: 0;
+}
+
+.task-facts-panel.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding: 0 16px;
+}
+
+.task-facts-panel.expanded {
+    max-height: 1200px;
+    opacity: 1;
+    padding: 16px 16px 12px 16px;
+}
+
+/* Fact Item */
+.fact-item {
+    margin-bottom: 16px;
+    animation: factFadeIn 0.4s ease forwards;
+    opacity: 0;
+}
+
+.fact-content {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.fact-bullet {
+    color: var(--primary);
+    font-size: 20px;
+    line-height: 1.6;
+    flex-shrink: 0;
+    margin-top: -2px;
+}
+
+.fact-text-container {
+    flex: 1;
+}
+
+.fact-text {
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.7;
+    margin-bottom: 8px;
+}
+
+.fact-reasoning {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 10px 12px;
+    background: rgba(102, 126, 234, 0.05);
+    border-left: 3px solid rgba(102, 126, 234, 0.3);
+    border-radius: 6px;
+    margin-top: 8px;
+    line-height: 1.6;
+}
+
+.reasoning-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* Animations */
+@keyframes factFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .task-summary-header {
+        padding: 12px 14px;
+    }
+
+    .task-summary-text {
+        font-size: 14px;
+    }
+
+    .task-facts-panel.expanded {
+        padding: 12px 14px 10px 14px;
+    }
+
+    .fact-text {
+        font-size: 14px;
+    }
+
+    .fact-reasoning {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .task-summary-header {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
+        border-color: rgba(102, 126, 234, 0.25);
+    }
+
+    .task-summary-header:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+        border-color: rgba(102, 126, 234, 0.4);
+    }
+
+    .fact-reasoning {
+        background: rgba(102, 126, 234, 0.08);
+        border-left-color: rgba(102, 126, 234, 0.4);
+    }
 }
 
 .scrum-item {
@@ -964,6 +1296,25 @@ body {
 
 /* ===== 반응형 ===== */
 @media (max-width: 768px) {
+    .scrum-tabs-container {
+        position: static;
+        margin-bottom: 16px;
+    }
+
+    .scrum-tabs {
+        flex-wrap: wrap;
+    }
+
+    .scrum-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .scrum-header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+
     .scrum-container {
         padding: 48px 24px;
         padding-bottom: 100px;
