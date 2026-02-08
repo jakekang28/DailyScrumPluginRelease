@@ -36,6 +36,31 @@
     }
   }
 
+  /**
+   * Service Worker 준비 대기 후 메시지 전송 (Race Condition 방지)
+   * @param {Object} message - 전송할 메시지
+   * @param {number} maxRetries - 최대 재시도 횟수
+   * @returns {Promise<any>} 응답
+   */
+  async function sendMessageWithRetry(message, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await chrome.runtime.sendMessage(message);
+      } catch (error) {
+        const errorMsg = error.message || '';
+        if (errorMsg.includes('context invalidated') ||
+            errorMsg.includes('Receiving end does not exist')) {
+          // Service worker가 아직 준비 안됨 - 대기 후 재시도
+          await new Promise(r => setTimeout(r, 100 * (i + 1)));
+          continue;
+        }
+        throw error;
+      }
+    }
+    // 모든 재시도 실패 시 조용히 실패
+    return null;
+  }
+
   // ============================================================================
   // 상수
   // ============================================================================
@@ -282,7 +307,7 @@
 
       // Chrome API 확인 후 메시지 전송
       if (this._hasChromeAPI) {
-        chrome.runtime.sendMessage({
+        sendMessageWithRetry({
           action: 'TAB_TRANSITION',
           payload: {
             type: document.hidden ? 'leave' : 'enter',
@@ -487,10 +512,10 @@
         }
       };
 
-      chrome.runtime.sendMessage({
+      sendMessageWithRetry({
         action: 'DATA_CAPTURED',
         payload: payload
-      }).catch(error => {
+      }).catch(() => {
         // Service Worker 메시지 전송 실패 무시
       });
 

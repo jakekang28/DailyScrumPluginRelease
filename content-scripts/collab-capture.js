@@ -37,6 +37,31 @@
     }
   }
 
+  /**
+   * Service Worker 준비 대기 후 메시지 전송 (Race Condition 방지)
+   * @param {Object} message - 전송할 메시지
+   * @param {number} maxRetries - 최대 재시도 횟수
+   * @returns {Promise<any>} 응답
+   */
+  async function sendMessageWithRetry(message, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await chrome.runtime.sendMessage(message);
+      } catch (error) {
+        const errorMsg = error.message || '';
+        if (errorMsg.includes('context invalidated') ||
+            errorMsg.includes('Receiving end does not exist')) {
+          // Service worker가 아직 준비 안됨 - 대기 후 재시도
+          await new Promise(r => setTimeout(r, 100 * (i + 1)));
+          continue;
+        }
+        throw error;
+      }
+    }
+    // 모든 재시도 실패 시 조용히 실패
+    return null;
+  }
+
   // ============================================================================
   // 유틸리티 함수
   // ============================================================================
@@ -202,7 +227,7 @@
 
       if (notionBuffer.length === 0) return;
 
-      chrome.runtime.sendMessage({
+      sendMessageWithRetry({
         action: 'DATA_CAPTURED',
         payload: {
           type: 'DAILY_SCRUM_CAPTURE',
@@ -214,7 +239,7 @@
             timestamp: Date.now()
           }
         }
-      }).catch(error => {
+      }).catch(() => {
       });
 
       // 버퍼 초기화
@@ -293,7 +318,7 @@
       if (processedMessages.has(messageId)) return;
 
       // 발신자
-      const sender = messageContainer.querySelector('[data-qa="message_sender_name"]')?.textContent?.trim();
+      const sender = messageContainer.querySelector('[data-qa="message_sender"]')?.textContent?.trim();
 
       // 메시지 내용
       const contentElement = messageContainer.querySelector('[class*="message_body"]') ||
@@ -314,7 +339,7 @@
                               timestampElement?.textContent;
 
       // 전송
-      chrome.runtime.sendMessage({
+      sendMessageWithRetry({
         action: 'DATA_CAPTURED',
         payload: {
           type: 'DAILY_SCRUM_CAPTURE',
@@ -328,7 +353,7 @@
             url: window.location.href
           }
         }
-      }).catch(error => {
+      }).catch(() => {
       });
 
       processedMessages.add(messageId);
