@@ -551,6 +551,30 @@ body {
     margin-top: -2px;
 }
 
+/* Timeline marker: time + source icon */
+.fact-timeline-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    min-width: 48px;
+    padding-top: 2px;
+}
+
+.fact-time {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent, #2383e2);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.fact-source-icon {
+    font-size: 14px;
+    line-height: 1;
+}
+
 .fact-text-container {
     flex: 1;
 }
@@ -560,6 +584,26 @@ body {
     color: var(--text-primary);
     line-height: 1.7;
     margin-bottom: 8px;
+}
+
+.fact-insight {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 10px 12px;
+    background: rgba(255, 215, 0, 0.08);
+    border-left: 3px solid #f5a623;
+    border-radius: 6px;
+    margin-top: 8px;
+    line-height: 1.6;
+}
+
+.fact-insight .insight-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
 }
 
 .fact-reasoning {
@@ -613,6 +657,11 @@ body {
         font-size: 14px;
     }
 
+    .fact-insight {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+
     .fact-reasoning {
         font-size: 12px;
         padding: 8px 10px;
@@ -629,6 +678,10 @@ body {
     .task-summary-header:hover {
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
         border-color: rgba(102, 126, 234, 0.4);
+    }
+
+    .fact-insight {
+        background: rgba(255, 215, 0, 0.12);
     }
 
     .fact-reasoning {
