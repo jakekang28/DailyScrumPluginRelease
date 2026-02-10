@@ -120,6 +120,7 @@
       this._subWindowTimer = null;
       this._flushTimer = null;
       this._boundListeners = {};
+      this._isCleanedUp = false;
 
       // Chrome API 가용성 확인
       this._hasChromeAPI = typeof chrome !== 'undefined' &&
@@ -562,6 +563,9 @@
     // ============================================================================
 
     cleanup() {
+      if (this._isCleanedUp) return;
+      this._isCleanedUp = true;
+
       try {
         // 타이머 정리
         if (this._typingTimer) clearTimeout(this._typingTimer);

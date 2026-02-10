@@ -282,10 +282,60 @@
     init();
   }
 
-  // CLEANUP_AND_STOP 메시지 리스너
+  // FLUSH_NOW / CLEANUP_AND_STOP 메시지 리스너
   if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.action === 'CLEANUP_AND_STOP') {
+      if (message.action === 'FLUSH_NOW') {
+        // EC-17: MIN_DURATION 체크 우회하여 즉시 캡처
+        if (!hasSentData && visitStartTime) {
+          try {
+            if (!isContextValid()) {
+              cleanup();
+              sendResponse({ success: true });
+              return true;
+            }
+
+            const url = window.location.href;
+            if (isSensitiveUrl(url)) {
+              sendResponse({ success: true });
+              return true;
+            }
+
+            const title = document.title.trim();
+            if (!title) {
+              sendResponse({ success: true });
+              return true;
+            }
+
+            const visitEndTime = Date.now();
+            const duration = visitEndTime - visitStartTime;
+            const siteType = classifySite(url, title);
+            const urlHash = generateUrlHash(url);
+
+            sendMessageWithRetry({
+              action: 'DATA_CAPTURED',
+              payload: {
+                type: 'DAILY_SCRUM_CAPTURE',
+                source: 'web-reference',
+                data: {
+                  url: url,
+                  title: title,
+                  siteType: siteType,
+                  urlHash: urlHash,
+                  visitedAt: visitStartTime,
+                  duration: Math.round(duration / 1000),
+                  timestamp: visitEndTime
+                }
+              }
+            }).catch(() => {});
+
+            hasSentData = true;
+          } catch (error) {
+            // 무시
+          }
+        }
+        sendResponse({ success: true });
+      } else if (message.action === 'CLEANUP_AND_STOP') {
         cleanup();
         sendResponse({ success: true });
       }
