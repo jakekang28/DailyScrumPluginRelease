@@ -119,10 +119,17 @@
         return resolve(existing);
       }
 
+      // 타임아웃
+      const timer = setTimeout(() => {
+        observer.disconnect();
+        resolve(null);
+      }, timeout);
+
       // MutationObserver로 요소 출현 감지
       const observer = new MutationObserver(() => {
         const element = document.querySelector(selector);
         if (element) {
+          clearTimeout(timer);
           observer.disconnect();
           resolve(element);
         }
@@ -132,12 +139,6 @@
         childList: true,
         subtree: true
       });
-
-      // 타임아웃
-      setTimeout(() => {
-        observer.disconnect();
-        resolve(null);
-      }, timeout);
     });
   }
 

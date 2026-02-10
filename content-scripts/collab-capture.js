@@ -176,7 +176,6 @@
           if (isSensitiveElement(block)) continue;
 
           // 이미 처리한 블록인지 확인 (최근 1초 이내)
-          const blockKey = `${blockId}-${Date.now()}`;
           if (processedBlocks.has(blockId)) continue;
 
           const content = block.textContent?.trim();
@@ -322,7 +321,7 @@
       // 메시지 ID 생성 (중복 방지)
       const messageId = messageContainer.getAttribute('data-ts') ||
                         messageContainer.getAttribute('id') ||
-                        simpleHash(messageContainer.textContent || '');
+                        simpleHash(messageContainer.textContent || '') + '-' + Date.now();
 
       if (processedMessages.has(messageId)) return;
 
