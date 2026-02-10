@@ -306,8 +306,8 @@
       return;
     }
 
-    // 탭이 숨겨져 있으면 수집 스킵
-    if (document.hidden) return;
+    // LLM 대화는 hidden 탭에서도 캡처 (C2: 사용자가 다른 탭으로 전환해도 스트리밍 완료 후 캡처)
+    // lastCapturedHash 중복 방지가 과다 수집을 방지함
 
     if (!conversation || !conversation.query || !conversation.answer) {
       return;
@@ -525,6 +525,25 @@
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+
+  // CLEANUP_AND_STOP / FLUSH_NOW 메시지 리스너
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.action === 'CLEANUP_AND_STOP') {
+        cleanup();
+        sendResponse({ success: true });
+      } else if (message.action === 'FLUSH_NOW') {
+        // EC-10: debounce 취소 후 즉시 추출
+        if (responseDebounceTimer) {
+          clearTimeout(responseDebounceTimer);
+          responseDebounceTimer = null;
+        }
+        attemptExtraction();
+        sendResponse({ success: true });
+      }
+      return true;
+    });
   }
 
   // 전역에 cleanup 함수 노출 (다음 리로드 시 cleanup 가능하도록)

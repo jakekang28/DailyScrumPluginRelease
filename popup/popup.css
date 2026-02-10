@@ -539,3 +539,15 @@ body {
   background: #e5e5e5;
   margin: 16px 0;
 }
+
+/* Offline Banner */
+.offline-banner {
+  padding: 8px 12px;
+  background: #fef3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  color: #856404;
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 12px;
+}

@@ -62,6 +62,9 @@
     return null;
   }
 
+  // M3: cleanup 후 FLUSH_NOW 등으로 인한 추가 캡처 방지
+  let isStopped = false;
+
   // ============================================================================
   // 유틸리티 함수
   // ============================================================================
@@ -212,18 +215,15 @@
   }
 
   /**
-   * Notion 데이터 전송 (Debounced)
+   * Notion 버퍼 즉시 전송
    */
-  const debouncedSendNotionData = debounce(() => {
+  function flushNotionBuffer() {
+    if (isStopped) return;
     try {
-      // Context 유효성 검사 (확장프로그램 리로드 대응)
       if (!isContextValid()) {
         cleanup();
         return;
       }
-
-      // 탭이 숨겨져 있으면 수집 스킵
-      if (document.hidden) return;
 
       if (notionBuffer.length === 0) return;
 
@@ -246,6 +246,15 @@
       notionBuffer = [];
     } catch (error) {
     }
+  }
+
+  /**
+   * Notion 데이터 전송 (Debounced)
+   */
+  const debouncedSendNotionData = debounce(() => {
+    // 탭이 숨겨져 있으면 수집 스킵
+    if (document.hidden) return;
+    flushNotionBuffer();
   }, 2000); // 2초 debounce
 
   // ============================================================================
@@ -392,6 +401,7 @@
    * 페이지 언로드 시 리소스 정리
    */
   function cleanup() {
+    isStopped = true;
     try {
       if (notionObserver) {
         notionObserver.disconnect();
@@ -442,6 +452,20 @@
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+
+  // FLUSH_NOW / CLEANUP_AND_STOP 메시지 리스너
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.action === 'FLUSH_NOW') {
+        flushNotionBuffer();
+        sendResponse({ success: true });
+      } else if (message.action === 'CLEANUP_AND_STOP') {
+        cleanup();
+        sendResponse({ success: true });
+      }
+      return true;
+    });
   }
 
   // 전역에 cleanup 함수 노출 (다음 리로드 시 cleanup 가능하도록)

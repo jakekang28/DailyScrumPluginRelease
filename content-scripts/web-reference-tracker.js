@@ -282,6 +282,17 @@
     init();
   }
 
+  // CLEANUP_AND_STOP 메시지 리스너
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.action === 'CLEANUP_AND_STOP') {
+        cleanup();
+        sendResponse({ success: true });
+      }
+      return true;
+    });
+  }
+
   // 전역에 cleanup 함수 노출 (다음 리로드 시 cleanup 가능하도록)
   window[SCRIPT_ID] = { cleanup };
 
