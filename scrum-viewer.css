@@ -888,6 +888,15 @@ body {
     border-radius: 6px;
 }
 
+.evidence-citation.evidence-citation-block {
+    display: block;
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: rgba(35, 131, 226, 0.04);
+    border-left: 3px solid rgba(35, 131, 226, 0.3);
+    border-radius: 0 6px 6px 0;
+}
+
 .evidence-citation .citation-arrow {
     color: var(--text-tertiary);
     font-size: 14px;
@@ -903,10 +912,26 @@ body {
     min-width: 0;
 }
 
+.evidence-citation-block .citation-text {
+    display: block;
+    font-style: italic;
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.7;
+    margin-bottom: 4px;
+}
+
 .evidence-citation .citation-attr {
     font-size: 12px;
     color: var(--text-tertiary);
     white-space: nowrap;
+}
+
+.evidence-citation-block .citation-attr {
+    display: block;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
 }
 
 .evidence-url-link {
@@ -934,11 +959,71 @@ body {
     line-height: 1.6;
 }
 
+/* Raw Excerpt — monospace, left border, real raw_content substring */
+.evidence-raw {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    padding: 10px 14px;
+    margin-top: 8px;
+    background: rgba(102, 126, 234, 0.04);
+    border-left: 3px solid rgba(102, 126, 234, 0.3);
+    border-radius: 0 6px 6px 0;
+    word-break: break-word;
+}
+
+/* Thread Connector — LLM reasoning between entries */
+.evidence-thread {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 0 4px;
+}
+
+.thread-arrow {
+    font-size: 14px;
+    color: var(--gradient-start);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.thread-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-style: italic;
+    line-height: 1.5;
+}
+
+/* Raw Badge — 「」 style for synthesis view */
+.action-item-raw-badge {
+    display: inline;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-style: normal;
+    margin-left: 6px;
+}
+
 .evidence-connector {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     color: var(--text-tertiary);
     padding: 6px 0;
     font-size: 14px;
+}
+
+.connector-arrow {
+    font-size: 14px;
+    color: var(--text-tertiary);
+}
+
+.connector-reason {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-style: italic;
 }
 
 .scrum-item {
@@ -1881,7 +1966,29 @@ body {
         background: rgba(128, 128, 128, 0.08);
     }
 
+    .evidence-citation.evidence-citation-block {
+        background: rgba(35, 131, 226, 0.08);
+        border-left-color: rgba(35, 131, 226, 0.4);
+    }
+
+    .evidence-citation-block .citation-text {
+        color: rgba(255, 255, 255, 0.85);
+    }
+
     .evidence-insight {
         background: rgba(255, 215, 0, 0.12);
+    }
+
+    .evidence-raw {
+        background: rgba(102, 126, 234, 0.08);
+        border-left-color: rgba(102, 126, 234, 0.4);
+    }
+
+    .thread-text {
+        color: var(--text-tertiary);
+    }
+
+    .action-item-raw-badge {
+        color: var(--text-tertiary);
     }
 }
