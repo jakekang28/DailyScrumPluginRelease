@@ -64,6 +64,9 @@
     return null;
   }
 
+  // M3: cleanup 후 FLUSH_NOW 등으로 인한 추가 캡처 방지
+  let isStopped = false;
+
   // ============================================================================
   // 유틸리티 함수
   // ============================================================================
@@ -150,6 +153,7 @@
    * Google Docs 활동 캡처 (API 사용)
    */
   async function captureGoogleDocsActivity() {
+    if (isStopped) return;
     try {
       // Context 유효성 검사 (확장프로그램 리로드 대응)
       if (!isContextValid()) {
@@ -234,6 +238,7 @@
    * Google Sheets 활동 캡처 (API 사용)
    */
   async function captureGoogleSheetsActivity() {
+    if (isStopped) return;
     try {
       // Context 유효성 검사 (확장프로그램 리로드 대응)
       if (!isContextValid()) {
@@ -323,6 +328,7 @@
    * Google Slides 활동 캡처 (API 사용)
    */
   async function captureGoogleSlidesActivity() {
+    if (isStopped) return;
     try {
       // Context 유효성 검사 (확장프로그램 리로드 대응)
       if (!isContextValid()) {
@@ -495,6 +501,7 @@
    * 페이지 언로드 시 리소스 정리
    */
   function cleanup() {
+    isStopped = true;
     try {
       // 타이머 정리
       if (docsIntervalId) {
@@ -575,6 +582,44 @@
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+
+  /**
+   * 즉시 캡처 트리거 (FLUSH_NOW 대응)
+   * interval guard를 우회하여 현재 앱의 capture 함수를 즉시 호출
+   */
+  function triggerImmediateCapture() {
+    if (isStopped) return;
+    const app = detectGoogleApp();
+    switch (app) {
+      case 'docs':
+        lastDocsCapture = 0;
+        captureGoogleDocsActivity();
+        break;
+      case 'sheets':
+        lastSheetsCapture = 0;
+        captureGoogleSheetsActivity();
+        break;
+      case 'slides':
+        lastSlidesCapture = 0;
+        captureGoogleSlidesActivity();
+        break;
+      // drive는 MutationObserver 기반이므로 즉시 캡처 불필요
+    }
+  }
+
+  // FLUSH_NOW / CLEANUP_AND_STOP 메시지 리스너
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.action === 'FLUSH_NOW') {
+        triggerImmediateCapture();
+        sendResponse({ success: true });
+      } else if (message.action === 'CLEANUP_AND_STOP') {
+        cleanup();
+        sendResponse({ success: true });
+      }
+      return true;
+    });
   }
 
   // 전역에 cleanup 함수 노출 (다음 리로드 시 cleanup 가능하도록)
