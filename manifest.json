@@ -27,11 +27,7 @@
     "https://sheets.google.com/*",
     "https://slides.google.com/*",
     "https://drive.google.com/*",
-    "https://developer.mozilla.org/*",
-    "https://stackoverflow.com/*",
-    "https://github.com/*",
-    "https://medium.com/*",
-    "https://dev.to/*"
+    "https://*/*"
   ],
   "content_scripts": [
     {
@@ -65,19 +61,6 @@
       ],
       "js": [
         "content-scripts/google-capture.js"
-      ],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://developer.mozilla.org/*",
-        "https://stackoverflow.com/*",
-        "https://github.com/*",
-        "https://medium.com/*",
-        "https://dev.to/*"
-      ],
-      "js": [
-        "content-scripts/web-reference-tracker.js"
       ],
       "run_at": "document_idle"
     },

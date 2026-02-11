@@ -179,6 +179,13 @@
       <div id="site-toggles" class="site-toggles">
         <!-- JavaScript로 동적 생성 -->
       </div>
+      <div id="domain-manager" class="domain-manager hidden">
+        <div class="domain-manager-header">
+          <span>수집된 도메인</span>
+          <span id="domain-count" class="domain-count"></span>
+        </div>
+        <div id="domain-list" class="domain-list"></div>
+      </div>
     </section>
 
     <!-- 수집 컨트롤 -->
@@ -188,7 +195,6 @@
           <span id="toggle-icon">▶</span>
           <span id="toggle-text">시작</span>
         </button>
-        <button id="generate-btn" class="btn btn-primary" disabled title="먼저 활동 수집을 시작하고 중지해주세요">Generate Report</button>
       </div>
       <div class="collection-status-bar" id="collectionStatusBar">
         <span class="status-dot" id="statusDot"></span>
@@ -200,13 +206,13 @@
 
     <!-- 액션 버튼 -->
     <section class="actions-section">
-      <button id="view-scrum-btn" class="btn btn-secondary">Daily Scrum 보기</button>
+      <button id="scrum-btn" class="btn btn-primary">Daily Scrum 보기</button>
       <button id="logout-btn" class="btn btn-secondary">로그아웃</button>
     </section>
   </div>
 
   <!-- 로딩 상태 -->
-  <div id="loading-view">
+  <div id="loading-view" class="hidden">
     <div class="spinner"></div>
     <p>로딩 중...</p>
   </div>

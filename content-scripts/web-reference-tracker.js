@@ -15,12 +15,18 @@
 
   const SCRIPT_ID = '__DAILY_SCRUM_WEB_REFERENCE_TRACKER__';
 
-  // 기존 인스턴스가 있으면 cleanup (확장프로그램 리로드 시)
+  // 기존 인스턴스 처리 (onActivated 재주입 vs 확장프로그램 리로드 구분)
   if (window[SCRIPT_ID]) {
     try {
+      // Extension context가 유효하면 이미 동작 중 → 재초기화 불필요
+      // (onActivated 재주입 시 타이머 리셋 + onMessage 리스너 누적 방지)
+      if (chrome && chrome.runtime && chrome.runtime.id) {
+        return;
+      }
+      // Context 무효 (확장프로그램 리로드/업데이트) → cleanup 후 재초기화
       window[SCRIPT_ID].cleanup();
     } catch (e) {
-      // 이전 인스턴스 cleanup 실패 무시
+      // Context 확인 또는 cleanup 실패 → 재초기화 진행
     }
   }
 
@@ -146,7 +152,7 @@
   /**
    * 페이지 정보 캡처
    */
-  function capturePageReference() {
+  async function capturePageReference() {
     try {
       // Context 유효성 검사 (확장프로그램 리로드 대응)
       if (!isContextValid()) {
@@ -200,8 +206,38 @@
       });
 
       hasSentData = true;
+
+      // 수집된 도메인 기록
+      await recordCollectedDomain(url);
     } catch (error) {
       // 무시
+    }
+  }
+
+  /**
+   * 수집된 도메인을 webRefCollectedDomains에 기록 (LRU, 최대 100개)
+   * capturePageReference()와 FLUSH_NOW 핸들러에서 공유
+   */
+  async function recordCollectedDomain(url) {
+    try {
+      const hostname = new URL(url).hostname;
+      const { webRefCollectedDomains = {} } = await chrome.storage.local.get('webRefCollectedDomains');
+      const existing = webRefCollectedDomains[hostname];
+      webRefCollectedDomains[hostname] = {
+        lastSeen: Date.now(),
+        count: (existing?.count || 0) + 1
+      };
+      // LRU: 100개 초과 시 가장 오래된 항목 제거
+      const entries = Object.entries(webRefCollectedDomains);
+      if (entries.length > 100) {
+        entries.sort((a, b) => b[1].lastSeen - a[1].lastSeen);
+        const trimmed = Object.fromEntries(entries.slice(0, 100));
+        await chrome.storage.local.set({ webRefCollectedDomains: trimmed });
+      } else {
+        await chrome.storage.local.set({ webRefCollectedDomains });
+      }
+    } catch (e) {
+      // 도메인 기록 실패는 무시
     }
   }
 
@@ -246,6 +282,7 @@
       window.removeEventListener('pagehide', handleBeforeUnload);
       visitStartTime = null;
       hasSentData = true; // 더 이상 전송하지 않도록
+      delete window[SCRIPT_ID]; // 재주입 시 SCRIPT_ID guard 통과 허용
     } catch (error) {
       // 무시
     }
@@ -255,10 +292,22 @@
   // 초기화
   // ============================================================================
 
-  function init() {
+  async function init() {
     try {
       // 민감 URL 체크
       if (isSensitiveUrl(window.location.href)) {
+        return;
+      }
+
+      // 제외 도메인 체크
+      try {
+        const hostname = new URL(window.location.href).hostname;
+        const { webRefExcludedDomains = [] } = await chrome.storage.local.get('webRefExcludedDomains');
+        if (webRefExcludedDomains.includes(hostname)) {
+          return;
+        }
+      } catch (e) {
+        // storage 접근 실패 시 수집 중단 (제외 목록 확인 불가 → fail-safe)
         return;
       }
 
@@ -330,6 +379,9 @@
             }).catch(() => {});
 
             hasSentData = true;
+
+            // 수집된 도메인 기록
+            recordCollectedDomain(url).catch(() => {});
           } catch (error) {
             // 무시
           }
