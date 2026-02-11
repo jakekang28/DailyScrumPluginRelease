@@ -834,6 +834,24 @@ body {
     padding: 24px;
 }
 
+/* Combined task sections in Workflow Map view */
+.combined-task-section {
+    margin-bottom: 16px;
+}
+
+.combined-task-section:last-child {
+    margin-bottom: 0;
+}
+
+.combined-task-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary, rgba(0,0,0,0.02));
+}
+
 /* Evidence Timeline */
 .evidence-timeline {
     display: flex;
