@@ -147,6 +147,7 @@
   let docsObserver = null;
   let docsIntervalId = null;
   let lastDocsCapture = 0;
+  let lastViewingDocId = null;
   const DOCS_CAPTURE_INTERVAL = 30000; // 30초
 
   /**
@@ -174,9 +175,38 @@
         return;
       }
 
-      // 편집 중인지 확인 (cursor 존재 여부)
-      const isEditing = document.querySelector('.kix-cursor') !== null ||
+      // 편집 중인지 확인 (cursor + document focus + editor active)
+      const hasCursor = document.querySelector('.kix-cursor') !== null ||
                        document.querySelector('.docs-text-ui-cursor-blink') !== null;
+      const inEditor = document.activeElement?.closest('.kix-appview-editor') !== null ||
+                      document.activeElement?.getAttribute('contenteditable') === 'true';
+      const isEditing = hasCursor && document.hasFocus() && inEditor;
+
+      if (!isEditing) {
+        // Viewing — skip API call, send lightweight record once per document
+        if (lastViewingDocId === documentId) return;
+        lastViewingDocId = documentId;
+
+        sendMessageWithRetry({
+          action: 'DATA_CAPTURED',
+          payload: {
+            type: 'DAILY_SCRUM_CAPTURE',
+            source: 'google-docs',
+            data: {
+              documentTitle: documentTitle,
+              documentId: documentId,
+              activityType: 'viewing',
+              timestamp: Date.now(),
+              url: window.location.href
+            }
+          }
+        }).catch(() => {});
+        lastDocsCapture = now;
+        return;
+      }
+
+      // Editing — reset viewing tracker so next view is captured
+      lastViewingDocId = null;
 
       // Background에 Google API 요청
       const response = await sendMessageWithRetry({
@@ -197,7 +227,7 @@
             data: {
               documentTitle: documentTitle,
               documentId: documentId,
-              activityType: isEditing ? 'editing' : 'viewing',
+              activityType: 'editing',
               visibleContent: response.data.text?.substring(0, 5000) || null,
               timestamp: Date.now(),
               url: window.location.href
@@ -232,6 +262,7 @@
   let sheetsObserver = null;
   let sheetsIntervalId = null;
   let lastSheetsCapture = 0;
+  let lastViewingSheetsId = null;
   const SHEETS_CAPTURE_INTERVAL = 30000; // 30초
 
   /**
@@ -264,9 +295,41 @@
                             document.querySelector('[aria-selected="true"][role="tab"]');
       const activeSheet = activeSheetTab?.textContent?.trim() || 'Sheet1';
 
-      // 편집 중인지 확인
-      const isEditing = document.querySelector('.docs-formula-bar-input') !== null ||
-                       document.querySelector('[aria-label*="Formula bar"]') !== null;
+      // 편집 중인지 확인 (formula bar에 focus가 있거나, cell input이 활성화된 경우)
+      const formulaBar = document.querySelector('.docs-formula-bar-input');
+      const cellInput = document.querySelector('.cell-input');
+      const isEditing = (formulaBar !== null && formulaBar.contains(document.activeElement)) ||
+                       (cellInput !== null && (
+                         cellInput.classList.contains('cell-input-active') ||
+                         cellInput.contains(document.activeElement)
+                       ));
+
+      if (!isEditing) {
+        // Viewing — skip API call, send lightweight record once per document
+        if (lastViewingSheetsId === documentId) return;
+        lastViewingSheetsId = documentId;
+
+        sendMessageWithRetry({
+          action: 'DATA_CAPTURED',
+          payload: {
+            type: 'DAILY_SCRUM_CAPTURE',
+            source: 'google-sheets',
+            data: {
+              documentTitle: documentTitle,
+              documentId: documentId,
+              activeSheet: activeSheet,
+              activityType: 'viewing',
+              timestamp: Date.now(),
+              url: window.location.href
+            }
+          }
+        }).catch(() => {});
+        lastSheetsCapture = now;
+        return;
+      }
+
+      // Editing — reset viewing tracker
+      lastViewingSheetsId = null;
 
       // Background에 Google API 요청
       const response = await sendMessageWithRetry({
@@ -288,7 +351,7 @@
               documentId: documentId,
               sheets: response.data.sheets,
               activeSheet: activeSheet,
-              activityType: isEditing ? 'editing' : 'viewing',
+              activityType: 'editing',
               timestamp: Date.now(),
               url: window.location.href
             }
@@ -322,6 +385,7 @@
   let slidesObserver = null;
   let slidesIntervalId = null;
   let lastSlidesCapture = 0;
+  let lastViewingSlidesId = null;
   const SLIDES_CAPTURE_INTERVAL = 30000; // 30초
 
   /**
@@ -359,8 +423,39 @@
                                  document.querySelector('[aria-selected="true"][role="option"]');
       const slideNumber = slideNumberElement?.getAttribute('aria-posinset') || 'unknown';
 
-      // 편집 모드 확인
-      const isEditing = document.querySelector('.punch-viewer-container.punch-present-active') === null;
+      // 편집 모드 확인 (active text cursor or shape selection with document focus)
+      const isPresenting = document.querySelector('.punch-viewer-container.punch-present-active') !== null;
+      const hasTextCursor = document.querySelector('.cursor-caret') !== null ||
+                           document.querySelector('.punch-viewer-svgpage-textbox-selected') !== null;
+      const hasActiveShape = document.querySelector('.punch-selection-border') !== null;
+      const isEditing = !isPresenting && document.hasFocus() && (hasTextCursor || hasActiveShape);
+
+      if (!isEditing) {
+        // Presenting/viewing — skip API call, send lightweight record once per document
+        if (lastViewingSlidesId === documentId) return;
+        lastViewingSlidesId = documentId;
+
+        sendMessageWithRetry({
+          action: 'DATA_CAPTURED',
+          payload: {
+            type: 'DAILY_SCRUM_CAPTURE',
+            source: 'google-slides',
+            data: {
+              documentTitle: documentTitle,
+              documentId: documentId,
+              currentSlide: slideNumber,
+              activityType: 'viewing',
+              timestamp: Date.now(),
+              url: window.location.href
+            }
+          }
+        }).catch(() => {});
+        lastSlidesCapture = now;
+        return;
+      }
+
+      // Editing — reset viewing tracker
+      lastViewingSlidesId = null;
 
       // Background에 Google API 요청
       const response = await sendMessageWithRetry({
@@ -385,7 +480,7 @@
               slides: response.data.slides,
               speakerNotes: speakerNotes,
               currentSlide: slideNumber,
-              activityType: isEditing ? 'editing' : 'presenting',
+              activityType: 'editing',
               timestamp: Date.now(),
               url: window.location.href
             }

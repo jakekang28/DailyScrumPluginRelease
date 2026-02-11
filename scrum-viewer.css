@@ -698,8 +698,22 @@ body {
     flex-shrink: 0;
 }
 
-.task-title-text {
+.task-title-wrap {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.task-tag {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    letter-spacing: 0.02em;
+}
+
+.task-title-text {
     font-size: 15px;
     font-weight: 600;
     color: var(--text-primary);
@@ -1845,6 +1859,10 @@ body {
     /* Mobile: Synthesis view */
     .task-synthesis-header {
         padding: 12px 14px;
+    }
+
+    .task-tag {
+        font-size: 10px;
     }
 
     .task-title-text {

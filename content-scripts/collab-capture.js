@@ -126,8 +126,15 @@
   // ============================================================================
 
   let notionObserver = null;
+  let notionNavObserver = null;
+  let notionUrlPollId = null;
+  let notionHandleUrlChange = null;
+  let notionTrackEditedBlock = null;
+  let notionTrackFocusin = null;
   const processedBlocks = new Set();
+  const editedBlockIds = new Set();
   let notionBuffer = [];
+  let lastViewingUrl = null;
 
   /**
    * Notion 블록 타입 감지
@@ -157,8 +164,43 @@
 
   /**
    * Notion 블록 변경 감지
+   *
+   * Edit detection: `input` event on document.body captures user typing
+   * in contenteditable blocks. MutationObserver only buffers blocks that
+   * the user has actually edited (in editedBlockIds), ignoring scroll-
+   * triggered DOM renders.
    */
   function setupNotionCapture() {
+    notionTrackEditedBlock = function(e) {
+      const block = e.target.closest('[data-block-id]');
+      if (!block) return;
+      const blockId = block.getAttribute('data-block-id');
+      if (blockId) {
+        editedBlockIds.add(blockId);
+        // Cap size to prevent unbounded growth on long sessions
+        if (editedBlockIds.size > 500) {
+          const iter = editedBlockIds.values();
+          for (let i = 0; i < 100; i++) editedBlockIds.delete(iter.next().value);
+        }
+      }
+    };
+
+    // focusin guard: only mark as edited if a recent input event occurred
+    let lastInputTime = 0;
+    notionTrackFocusin = function(e) {
+      if (Date.now() - lastInputTime < 2000) {
+        notionTrackEditedBlock(e);
+      }
+    };
+
+    // Track edited blocks via input event (typing in contenteditable)
+    document.body.addEventListener('input', (e) => {
+      lastInputTime = Date.now();
+      notionTrackEditedBlock(e);
+    }, true);
+    // Track focus into blocks only near recent input (formatting, slash commands)
+    document.body.addEventListener('focusin', notionTrackFocusin, true);
+
     notionObserver = new MutationObserver((mutations) => {
       try {
         for (const mutation of mutations) {
@@ -171,6 +213,9 @@
 
           const blockId = block.getAttribute('data-block-id');
           if (!blockId) continue;
+
+          // Only capture blocks the user has actually edited
+          if (!editedBlockIds.has(blockId)) continue;
 
           // 민감한 요소 체크
           if (isSensitiveElement(block)) continue;
@@ -211,6 +256,62 @@
         characterData: true
       });
     }
+
+    // Send initial viewing record for the current page
+    sendNotionViewingRecord();
+
+    // SPA navigation detection (Notion uses pushState)
+    let currentUrl = window.location.href;
+    notionHandleUrlChange = function() {
+      if (window.location.href !== currentUrl) {
+        currentUrl = window.location.href;
+        editedBlockIds.clear();
+        lastViewingUrl = null;
+        sendNotionViewingRecord();
+      }
+    };
+
+    // Method 1: Title mutation (covers most Notion navigations)
+    const titleEl = document.querySelector('head > title') || document.head;
+    if (titleEl) {
+      notionNavObserver = new MutationObserver(notionHandleUrlChange);
+      notionNavObserver.observe(titleEl, {
+        childList: true, subtree: true, characterData: true
+      });
+    }
+
+    // Method 2: popstate (covers browser back/forward)
+    window.addEventListener('popstate', notionHandleUrlChange);
+
+    // Method 3: Periodic URL poll (catches pushState without title change)
+    notionUrlPollId = setInterval(notionHandleUrlChange, 2000);
+  }
+
+  /**
+   * Send a lightweight viewing record (title + url, no blocks)
+   */
+  function sendNotionViewingRecord() {
+    if (isStopped) return;
+    if (!isContextValid()) return;
+
+    const url = window.location.href;
+    if (lastViewingUrl === url) return;
+    lastViewingUrl = url;
+
+    sendMessageWithRetry({
+      action: 'DATA_CAPTURED',
+      payload: {
+        type: 'DAILY_SCRUM_CAPTURE',
+        source: 'notion',
+        data: {
+          blocks: [],
+          url: url,
+          pageTitle: document.title,
+          activityType: 'viewing',
+          timestamp: Date.now()
+        }
+      }
+    }).catch(() => {});
   }
 
   /**
@@ -235,6 +336,7 @@
             blocks: [...notionBuffer],
             url: window.location.href,
             pageTitle: document.title,
+            activityType: 'editing',
             timestamp: Date.now()
           }
         }
@@ -406,11 +508,24 @@
         notionObserver.disconnect();
         notionObserver = null;
       }
+      if (notionNavObserver) {
+        notionNavObserver.disconnect();
+        notionNavObserver = null;
+      }
+      if (notionUrlPollId) {
+        clearInterval(notionUrlPollId);
+        notionUrlPollId = null;
+      }
+      if (notionHandleUrlChange) {
+        window.removeEventListener('popstate', notionHandleUrlChange);
+        notionHandleUrlChange = null;
+      }
       if (slackObserver) {
         slackObserver.disconnect();
         slackObserver = null;
       }
       processedBlocks.clear();
+      editedBlockIds.clear();
       processedMessages.clear();
       notionBuffer = [];
     } catch (error) {
