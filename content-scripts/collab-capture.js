@@ -236,10 +236,10 @@
 
           processedBlocks.add(blockId);
 
-          // 1초 후 처리된 블록 ID 제거 (재편집 감지 위해)
+          // debounce(2s)보다 길게 설정하여 같은 flush 내 중복 방지
           setTimeout(() => {
             processedBlocks.delete(blockId);
-          }, 1000);
+          }, 3000);
 
           // Debounced 전송
           debouncedSendNotionData();
@@ -327,13 +327,21 @@
 
       if (notionBuffer.length === 0) return;
 
+      // Dedup: same blockId captured multiple times within debounce window
+      // Keep only the LAST capture per blockId (most complete content)
+      const latestByBlockId = new Map();
+      for (const block of notionBuffer) {
+        latestByBlockId.set(block.blockId, block);
+      }
+      const dedupedBlocks = Array.from(latestByBlockId.values());
+
       sendMessageWithRetry({
         action: 'DATA_CAPTURED',
         payload: {
           type: 'DAILY_SCRUM_CAPTURE',
           source: 'notion',
           data: {
-            blocks: [...notionBuffer],
+            blocks: dedupedBlocks,
             url: window.location.href,
             pageTitle: document.title,
             activityType: 'editing',
