@@ -100,6 +100,8 @@
 
   const DEBOUNCE_DELAY = 1500; // 응답 안정화 대기 시간 (ms)
   const STREAMING_CHECK_INTERVAL = 500; // 스트리밍 체크 간격 (ms)
+  const SETUP_MAX_RETRIES = 5; // setupObserver 최대 재시도 횟수
+  const SETUP_BASE_DELAY = 5000; // 재시도 초기 대기 (ms) — 5s, 10s, 20s, 40s, 80s
 
   // ============================================================================
   // 유틸리티 함수
@@ -429,7 +431,7 @@
   /**
    * DOM 변경 감지 시작 (비동기)
    */
-  async function setupObserver() {
+  async function setupObserver(retryCount = 0) {
     if (!config) {
       console.warn('[Daily Scrum] No config for platform:', platform);
       return;
@@ -439,6 +441,17 @@
     const sendBtn = await waitForElement(config.sendBtn, 10000);
 
     if (!sendBtn) {
+      if (retryCount < SETUP_MAX_RETRIES) {
+        const delay = SETUP_BASE_DELAY * Math.pow(2, retryCount);
+        setTimeout(() => setupObserver(retryCount + 1).catch(() => {}), delay);
+      } else {
+        // 모든 재시도 실패 — background에 알림 요청
+        sendMessageWithRetry({
+          action: 'LLM_CAPTURE_FAILED',
+          platform: platform,
+          url: window.location.href
+        }).catch(() => {});
+      }
       return;
     }
 
