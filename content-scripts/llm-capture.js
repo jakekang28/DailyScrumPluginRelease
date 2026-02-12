@@ -389,21 +389,36 @@
 
   /**
    * 대화 추출 시도
+   * Fix 3: re-entry guard — FLUSH_NOW와 streamingCheckInterval 동시 호출 방지
    */
+  let _isExtracting = false;
+
   function attemptExtraction() {
-    // 폴링 타이머 정리
-    if (streamingCheckInterval) {
-      clearInterval(streamingCheckInterval);
-      streamingCheckInterval = null;
-    }
+    if (_isExtracting) return;
+    _isExtracting = true;
+    try {
+      // 폴링 타이머 정리
+      if (streamingCheckInterval) {
+        clearInterval(streamingCheckInterval);
+        streamingCheckInterval = null;
+      }
 
-    if (isStreaming) {
-      isStreaming = false;
-    }
+      // B1: debounce 타이머도 정리 — interval과 debounce 이중 발화 방지
+      if (responseDebounceTimer) {
+        clearTimeout(responseDebounceTimer);
+        responseDebounceTimer = null;
+      }
 
-    const conversation = extractLastConversation();
-    if (conversation) {
-      sendConversation(conversation);
+      if (isStreaming) {
+        isStreaming = false;
+      }
+
+      const conversation = extractLastConversation();
+      if (conversation) {
+        sendConversation(conversation);
+      }
+    } finally {
+      _isExtracting = false;
     }
   }
 

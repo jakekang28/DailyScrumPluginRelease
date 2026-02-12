@@ -285,11 +285,14 @@
       this.buffer.selectionEvents++;
 
       // 컨텍스트 기록 (텍스트 내용은 수집하지 않음)
-      this.buffer.selectionContext.push({
-        textLength: text.length,
-        containsCode: this._isCodeElement(container),
-        elementType: this._classifyElement(container)
-      });
+      // C1: hard cap to prevent unbounded growth between flushes
+      if (this.buffer.selectionContext.length < 50) {
+        this.buffer.selectionContext.push({
+          textLength: text.length,
+          containsCode: this._isCodeElement(container),
+          elementType: this._classifyElement(container)
+        });
+      }
 
       this._trackRapidAction('select');
     }
@@ -421,11 +424,14 @@
 
       // 3개 이상 행동이면 시퀀스 기록
       if (this._recentActions.length >= MIN_RAPID_ACTION_COUNT) {
-        const sequence = this._recentActions.map(a => a.type);
-        this.buffer.rapidActionSequence.push({
-          sequence: sequence,
-          at: now
-        });
+        // C3: cap rapid action sequences per flush cycle
+        if (this.buffer.rapidActionSequence.length < 20) {
+          const sequence = this._recentActions.map(a => a.type);
+          this.buffer.rapidActionSequence.push({
+            sequence: sequence,
+            at: now
+          });
+        }
 
         // 중복 방지를 위해 리셋
         this._recentActions = [];
@@ -443,7 +449,10 @@
           return 'low';
         });
 
-        this.buffer.focusDuration.push(profile);
+        // Fix 6: cap focusDuration to prevent unbounded growth (100 ≈ ~16min of 10s cycles)
+        if (this.buffer.focusDuration.length < 100) {
+          this.buffer.focusDuration.push(profile);
+        }
 
         // 카운터 리셋
         this._subWindowEvents = [0, 0, 0];
@@ -517,7 +526,7 @@
       };
 
       sendMessageWithRetry({
-        action: 'DATA_CAPTURED',
+        action: 'INTERACTION_METRICS_UPDATE',
         payload: payload
       }).catch(() => {
         // Service Worker 메시지 전송 실패 무시

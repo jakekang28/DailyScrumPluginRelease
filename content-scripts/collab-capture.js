@@ -177,10 +177,11 @@
       const blockId = block.getAttribute('data-block-id');
       if (blockId) {
         editedBlockIds.add(blockId);
-        // Cap size to prevent unbounded growth on long sessions
+        // C2: Cap size — keep newest 400 entries when exceeding 500
         if (editedBlockIds.size > 500) {
-          const iter = editedBlockIds.values();
-          for (let i = 0; i < 100; i++) editedBlockIds.delete(iter.next().value);
+          const keep = new Set(Array.from(editedBlockIds).slice(-400));
+          editedBlockIds.clear();
+          keep.forEach(id => editedBlockIds.add(id));
         }
       }
     };
@@ -317,7 +318,7 @@
   /**
    * Notion 버퍼 즉시 전송
    */
-  function flushNotionBuffer() {
+  async function flushNotionBuffer() {
     if (isStopped) return;
     try {
       if (!isContextValid()) {
@@ -335,7 +336,7 @@
       }
       const dedupedBlocks = Array.from(latestByBlockId.values());
 
-      sendMessageWithRetry({
+      await sendMessageWithRetry({
         action: 'DATA_CAPTURED',
         payload: {
           type: 'DAILY_SCRUM_CAPTURE',
@@ -580,8 +581,12 @@
   if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message.action === 'FLUSH_NOW') {
-        flushNotionBuffer();
-        sendResponse({ success: true });
+        flushNotionBuffer().then(() => {
+          sendResponse({ success: true });
+        }).catch(() => {
+          sendResponse({ success: true });
+        });
+        return true; // keep message channel open for async response
       } else if (message.action === 'CLEANUP_AND_STOP') {
         cleanup();
         sendResponse({ success: true });

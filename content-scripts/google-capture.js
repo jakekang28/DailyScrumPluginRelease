@@ -201,7 +201,6 @@
             }
           }
         }).catch(() => {});
-        lastDocsCapture = now;
         return;
       }
 
@@ -218,6 +217,8 @@
       });
 
       if (response && response.success) {
+        // Fix 4: update timestamp after successful API call (not before)
+        lastDocsCapture = Date.now();
         // API에서 가져온 텍스트로 데이터 캡처
         sendMessageWithRetry({
           action: 'DATA_CAPTURED',
@@ -236,9 +237,8 @@
         }).catch(() => {
         });
       } else {
+        // API failure — don't update timestamp, allow retry on next interval
       }
-
-      lastDocsCapture = now;
     } catch (error) {
     }
   }
@@ -324,7 +324,6 @@
             }
           }
         }).catch(() => {});
-        lastSheetsCapture = now;
         return;
       }
 
@@ -341,6 +340,8 @@
       });
 
       if (response && response.success) {
+        // Fix 4: update timestamp after successful API call (not before)
+        lastSheetsCapture = Date.now();
         sendMessageWithRetry({
           action: 'DATA_CAPTURED',
           payload: {
@@ -359,9 +360,8 @@
         }).catch(() => {
         });
       } else {
+        // API failure — don't update timestamp, allow retry on next interval
       }
-
-      lastSheetsCapture = now;
     } catch (error) {
     }
   }
@@ -450,7 +450,6 @@
             }
           }
         }).catch(() => {});
-        lastSlidesCapture = now;
         return;
       }
 
@@ -467,6 +466,8 @@
       });
 
       if (response && response.success) {
+        // Fix 4: update timestamp after successful API call (not before)
+        lastSlidesCapture = Date.now();
         sendMessageWithRetry({
           action: 'DATA_CAPTURED',
           payload: {
@@ -488,9 +489,8 @@
         }).catch(() => {
         });
       } else {
+        // API failure — don't update timestamp, allow retry on next interval
       }
-
-      lastSlidesCapture = now;
     } catch (error) {
     }
   }
