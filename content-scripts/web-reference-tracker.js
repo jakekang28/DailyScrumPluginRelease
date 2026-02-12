@@ -90,6 +90,10 @@
   let visitStartTime = null;
   let isPageActive = true;
   let hasSentData = false;
+  // Fix 8: SPA navigation detection state
+  let _lastUrl = null;
+  let _spaCheckInterval = null;
+  let _spaNavHandler = null;
 
   // ============================================================================
   // 유틸리티 함수
@@ -280,6 +284,15 @@
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('pagehide', handleBeforeUnload);
+      // Fix 8: SPA detection cleanup
+      if (_spaCheckInterval) {
+        clearInterval(_spaCheckInterval);
+        _spaCheckInterval = null;
+      }
+      if (_spaNavHandler) {
+        window.removeEventListener('popstate', _spaNavHandler);
+        _spaNavHandler = null;
+      }
       visitStartTime = null;
       hasSentData = true; // 더 이상 전송하지 않도록
       delete window[SCRIPT_ID]; // 재주입 시 SCRIPT_ID guard 통과 허용
@@ -318,6 +331,25 @@
       document.addEventListener('visibilitychange', handleVisibilityChange);
       window.addEventListener('beforeunload', handleBeforeUnload);
       window.addEventListener('pagehide', handleBeforeUnload);
+
+      // Fix 8: SPA navigation detection — reset visitStartTime on URL change
+      _lastUrl = window.location.href;
+      _spaNavHandler = () => {
+        const currentUrl = window.location.href;
+        if (currentUrl !== _lastUrl) {
+          // 이전 URL 데이터 전송
+          if (!hasSentData && visitStartTime) {
+            capturePageReference();
+          }
+          // 새 URL로 리셋
+          _lastUrl = currentUrl;
+          visitStartTime = Date.now();
+          hasSentData = false;
+        }
+      };
+      window.addEventListener('popstate', _spaNavHandler);
+      // pushState/replaceState는 popstate를 발생시키지 않으므로 폴링 추가
+      _spaCheckInterval = setInterval(_spaNavHandler, 3000);
 
     } catch (error) {
       // 무시
