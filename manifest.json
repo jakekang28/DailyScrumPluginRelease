@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "AI work digest - Loom",
+  "name": "BeCalm: AI-Work Digest",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApVHto+6uzec/eiJTTV6rt7lEM9Yti8+NY7weM7ObQoz5bhXQxa272Q2Si5eARykJeYJBPhq2g9hBWNs0ITSt6KCsL4W2qcoR6Mbghhi7P/YZQupfCkIw1Q5f3QC/MS0+xBepSpE9iwPf6PfnA3yrSSEryBxae7AdTBYqHUcEUZtKI1B3IfvW+vcz0iribF4DslBLn39pjZvKaDzmjygXiET11KvD/b3CGXNjYBkfDGnEvPahGQZv3/0wZ/yWKwgNiff4ZtajoOtr2naMjRR0CvwCqv8cNxQSnBOZ+2t7bpia7nsjKtFOW4g5CbMahu5ZFIy82YuE6zNqfZPI+LxLmQIDAQAB",
   "version": "1.0.0",
   "description": "Auto-summarize your daily work across AI tools and collaboration apps. End-to-end encrypted. Details in app.",
