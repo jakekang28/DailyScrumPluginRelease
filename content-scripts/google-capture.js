@@ -663,12 +663,10 @@
           setupDriveCapture();
           break;
         default:
-          console.warn('[Daily Scrum] Unknown Google Workspace app');
           return;
       }
 
     } catch (error) {
-      console.error('[Daily Scrum] Initialization error:', error);
     }
   }
 
