@@ -415,6 +415,22 @@
    * Slack 메시지 추출
    * @param {Element} messageContainer - 메시지 컨테이너 요소
    */
+  /**
+   * 오늘 날짜인지 확인 (data-ts 기반)
+   * @param {string} dataTs - Slack timestamp (예: "1739462400.123456")
+   * @returns {boolean} 오늘 메시지이면 true, 판별 불가 시 true (수집 허용)
+   */
+  function isMessageFromToday(dataTs) {
+    if (!dataTs) return true; // 타임스탬프 없으면 수집 허용
+    const epochSec = parseFloat(dataTs);
+    if (isNaN(epochSec)) return true;
+    const msgDate = new Date(epochSec * 1000);
+    const now = new Date();
+    return msgDate.getFullYear() === now.getFullYear() &&
+           msgDate.getMonth() === now.getMonth() &&
+           msgDate.getDate() === now.getDate();
+  }
+
   function extractSlackMessage(messageContainer) {
     try {
       // Context 유효성 검사 (확장프로그램 리로드 대응)
@@ -430,11 +446,18 @@
       if (isSensitiveElement(messageContainer)) return;
 
       // 메시지 ID 생성 (중복 방지)
-      const messageId = messageContainer.getAttribute('data-ts') ||
+      const dataTs = messageContainer.getAttribute('data-ts');
+      const messageId = dataTs ||
                         messageContainer.getAttribute('id') ||
                         simpleHash(messageContainer.textContent || '') + '-' + Date.now();
 
       if (processedMessages.has(messageId)) return;
+
+      // 오늘 날짜 메시지만 수집
+      if (!isMessageFromToday(dataTs)) {
+        processedMessages.add(messageId);
+        return;
+      }
 
       // 발신자
       const sender = messageContainer.querySelector('[data-qa="message_sender"]')?.textContent?.trim();
