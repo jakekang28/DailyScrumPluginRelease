@@ -707,10 +707,12 @@ body {
 }
 
 .task-tag {
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-tertiary);
-    letter-spacing: 0.02em;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gradient-start);
+    letter-spacing: 0.01em;
+    margin-bottom: 6px;
+    text-align: left;
 }
 
 .task-title-text {
@@ -1879,7 +1881,7 @@ body {
     }
 
     .task-tag {
-        font-size: 10px;
+        font-size: 12px;
     }
 
     .task-title-text {
