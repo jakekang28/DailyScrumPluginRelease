@@ -9,61 +9,275 @@
 <body>
   <div id="offline-banner" class="offline-banner hidden">오프라인 상태 — 데이터는 로컬에 보관됩니다</div>
 
-  <!-- 데이터 수집 동의 화면 (최초 실행 시) -->
+  <!-- 이용약관 및 개인정보 처리방침 동의 화면 (최초 실행 시) -->
   <div id="consent-view" class="hidden">
     <div class="header">
-      <h1>Daily Scrum Tracker</h1>
-      <p class="subtitle">데이터 수집 및 사용에 대한 동의</p>
+      <h1>BeCalm: AI-Work Digest</h1>
+      <p class="subtitle">이용약관 및 개인정보 처리방침</p>
     </div>
 
-    <div class="consent-content">
-      <section class="consent-section">
-        <h3>수집하는 데이터</h3>
-        <ul class="consent-list">
-          <li><strong>AI 도구 대화 내용</strong> — ChatGPT, Claude, Gemini에서의 질문과 응답</li>
-          <li><strong>협업 도구 활동</strong> — Notion 페이지 제목, Slack 메시지 요약</li>
-          <li><strong>Google Workspace 활동</strong> — Docs/Sheets/Slides 문서 제목 및 편집 활동</li>
-          <li><strong>인터랙션 메트릭</strong> — 클릭 횟수, 스크롤 패턴, 타이핑 컨텍스트, 탭 전환 패턴, 집중도 분포</li>
+    <div class="consent-scroll">
+      <div class="consent-meta">
+        <span>시행일: 2026-02-12</span>
+        <span>운영자: Without</span>
+        <span>문의: w.out2026@gmail.com</span>
+      </div>
+
+      <p class="consent-intro">본 문서는 크롬 확장프로그램 <strong>BeCalm: AI-Work Digest</strong>(이하 "서비스")의 이용조건 및 개인정보 처리에 관한 사항을 규정합니다. 사용자는 서비스 설치·실행 및 "동의" 버튼 클릭(또는 이에 준하는 동작)을 통해 본 약관 및 개인정보 처리방침에 동의합니다.</p>
+
+      <!-- 1. 용어 정의 -->
+      <section class="terms-section">
+        <h3>1. 용어 정의</h3>
+        <ol class="terms-list-numbered">
+          <li><strong>서비스</strong>: 회사가 제공하는 크롬 확장프로그램 및 관련 서버/웹 기능 일체</li>
+          <li><strong>사용자</strong>: 서비스를 설치·접속·이용하는 자</li>
+          <li><strong>원문 데이터</strong>: 보고서 생성 전 단계에서 수집·처리되는 텍스트/메타데이터(예: AI 대화 원문, URL 등)</li>
+          <li><strong>보고서</strong>: 서비스가 자동 생성·제공하는 Daily Scrum 요약 결과물</li>
+          <li><strong>처리위탁(수탁사)</strong>: 회사로부터 개인정보 처리업무를 위탁받아 처리하는 외부 사업자(예: 클라우드, AI API 제공자)</li>
+        </ol>
+      </section>
+
+      <!-- 2. 약관의 효력 및 변경 -->
+      <section class="terms-section">
+        <h3>2. 약관의 효력 및 변경</h3>
+        <ol class="terms-list-numbered">
+          <li>본 약관은 사용자가 동의 후 서비스를 이용하는 시점부터 효력이 발생합니다.</li>
+          <li>회사는 관련 법령을 위반하지 않는 범위에서 약관/방침을 변경할 수 있으며, 변경 시 서비스 내 공지, 웹페이지 공지, 이메일 안내 등 합리적인 방식으로 고지합니다.</li>
+          <li>변경 이후에도 사용자가 서비스를 계속 이용하면 변경 약관에 동의한 것으로 봅니다.</li>
+        </ol>
+      </section>
+
+      <!-- 3. 서비스의 내용 -->
+      <section class="terms-section">
+        <h3>3. 서비스의 내용</h3>
+        <p class="terms-text">서비스는 사용자의 업무/작업 맥락을 기반으로 다음 기능을 제공합니다.</p>
+        <ul class="terms-list">
+          <li><strong>Daily Scrum 보고서 자동 생성</strong>(업무 요약, 작업 로그 구조화, 인지 흐름 기반 정리 등)</li>
+          <li>사용자의 작업 기록을 기반으로 한 <strong>정리/요약 결과물 제공</strong></li>
         </ul>
       </section>
 
-      <section class="consent-section">
-        <h3>수집하지 않는 데이터</h3>
-        <ul class="consent-list">
+      <!-- 4. 서비스 이용 및 권한 -->
+      <section class="terms-section">
+        <h3>4. 서비스 이용 및 권한</h3>
+        <ol class="terms-list-numbered">
+          <li>서비스는 기능 제공을 위해 브라우저 권한 및 외부 서비스(예: Google Workspace, Notion, Slack 등) 접근 권한을 요청할 수 있습니다.</li>
+          <li>회사는 <strong>기능 수행에 필요한 최소 권한</strong>만 요청하며, 데이터 처리 목적과 범위를 사용자에게 고지합니다.</li>
+          <li>사용자는 언제든지 브라우저 설정에서 권한을 철회하거나 확장프로그램을 제거하여 데이터 수집을 중단할 수 있습니다.</li>
+        </ol>
+      </section>
+
+      <!-- 5. 사용자 의무 및 금지행위 -->
+      <section class="terms-section">
+        <h3>5. 사용자 의무 및 금지행위</h3>
+        <p class="terms-text">사용자는 다음 행위를 해서는 안 됩니다.</p>
+        <ul class="terms-list">
+          <li>서비스/시스템을 역설계, 취약점 공격, 비정상 트래픽 유발 등으로 방해하는 행위</li>
+          <li>타인의 계정/데이터에 무단 접근하는 행위</li>
+          <li>법령 또는 타인의 권리를 침해하는 방식으로 서비스를 이용하는 행위</li>
+        </ul>
+      </section>
+
+      <!-- 6. 지식재산권 -->
+      <section class="terms-section">
+        <h3>6. 지식재산권</h3>
+        <ol class="terms-list-numbered">
+          <li>서비스 및 관련 소프트웨어/브랜드/UI/템플릿 등의 권리는 회사 또는 정당한 권리자에게 있습니다.</li>
+          <li>사용자가 제공한 원본 콘텐츠(원문 데이터)의 권리는 사용자에게 귀속됩니다.</li>
+          <li>회사는 <strong>보고서 생성 및 제공</strong>을 위해 필요한 범위에서 사용자의 원문 데이터를 처리할 수 있습니다.</li>
+        </ol>
+      </section>
+
+      <!-- 7. 서비스 중단 및 해지 -->
+      <section class="terms-section">
+        <h3>7. 서비스 중단 및 해지</h3>
+        <ol class="terms-list-numbered">
+          <li>회사는 서비스 운영상 필요한 경우(점검, 장애 대응, 시스템 변경 등) 일시적으로 서비스를 중단할 수 있습니다.</li>
+          <li>사용자는 언제든지 확장프로그램 제거 또는 기능 비활성화로 서비스 이용을 중단할 수 있습니다.</li>
+        </ol>
+      </section>
+
+      <!-- 8. 면책 및 책임 제한 -->
+      <section class="terms-section">
+        <h3>8. 면책 및 책임 제한 (베타/MVP 고지)</h3>
+        <ol class="terms-list-numbered">
+          <li>서비스는 베타/MVP 단계로 일부 기능 오류, 요약 결과의 누락·부정확성이 발생할 수 있습니다.</li>
+          <li>회사는 관련 법령이 허용하는 범위에서 간접손해, 특별손해 등에 대한 책임을 제한할 수 있습니다.</li>
+          <li>단, 회사의 고의 또는 중대한 과실로 인한 손해는 예외로 합니다.</li>
+        </ol>
+      </section>
+
+      <!-- 9. 준거법 및 관할 -->
+      <section class="terms-section">
+        <h3>9. 준거법 및 관할</h3>
+        <p class="terms-text">본 약관은 대한민국 법령을 준거법으로 하며, 분쟁 발생 시 민사소송법상 관할 법원에 따릅니다.</p>
+      </section>
+
+      <!-- 개인정보 처리방침 헤더 -->
+      <div class="terms-divider">
+        <h2>개인정보 처리방침</h2>
+      </div>
+
+      <!-- 10. 개인정보 처리의 원칙 -->
+      <section class="terms-section">
+        <h3>10. 개인정보 처리의 원칙</h3>
+        <p class="terms-text">회사는 개인정보 관련 법령을 준수하며, <strong>보고서 생성에 필요한 최소한의 데이터만</strong> 수집·이용합니다. 사용자는 동의를 거부할 수 있으며, 동의하지 않으면 서비스의 핵심 기능(보고서 자동 생성 등)이 제한될 수 있습니다.</p>
+      </section>
+
+      <!-- 11. 수집하는 데이터 -->
+      <section class="terms-section">
+        <h3>11. 수집하는 데이터</h3>
+
+        <h4>11.1 수집하는 데이터 (사용자 동의 시)</h4>
+        <p class="terms-text">회사는 사용자가 동의한 경우, Daily Scrum 보고서 생성을 위해 다음 데이터를 수집·처리할 수 있습니다.</p>
+        <ol class="terms-list-numbered">
+          <li><strong>AI 도구 대화 내용(원문)</strong> — ChatGPT, Claude, Gemini 등에서의 질문과 응답(사용자가 해당 기능을 활성화한 경우)</li>
+          <li><strong>협업 도구 활동(메타데이터/요약)</strong> — Notion: 페이지 제목 등(연동/권한 승인 시), Slack: 메시지 요약 등(연동/권한 승인 시)</li>
+          <li><strong>Google Workspace 활동(메타데이터)</strong> — Docs/Sheets/Slides 문서 제목 및 편집 활동 메타데이터(예: 문서 식별자, 수정 이벤트 시각, 변경 여부 등)</li>
+          <li><strong>웹 브라우징 데이터</strong> — 접속 Website URL(전체 URL): 사용자가 방문한 페이지의 전체 URL</li>
+          <li><strong>인터랙션 메트릭(집계 지표)</strong> — 클릭 횟수, 스크롤 패턴(구간/빈도/방향 등), 타이핑 컨텍스트(입력 "내용" 제외: 입력 여부/분량/속도 등), 탭 전환 패턴, 집중도 분포 등</li>
+        </ol>
+
+        <h4>11.2 수집하지 않는 데이터</h4>
+        <p class="terms-text">회사는 아래 정보를 수집하지 않습니다.</p>
+        <ul class="terms-list">
           <li>비밀번호, 신용카드 정보 등 민감 정보</li>
-          <li>키 입력 내용 (키로깅 없음)</li>
-          <li>URL 전체 경로, 탭 제목</li>
-          <li>복사/붙여넣기한 내용</li>
-          <li>스크롤 좌표, 클릭 위치</li>
+          <li><strong>키 입력 내용(키로깅 없음)</strong></li>
+          <li><strong>복사/붙여넣기 한 "내용"</strong></li>
+          <li><strong>스크롤 좌표, 클릭 위치 등 정밀 좌표/포지션</strong></li>
+        </ul>
+
+        <div class="terms-note">
+          <p>사용자가 AI 대화/문서 등에 민감정보를 직접 입력하는 경우, 그 "입력된 원문"이 보고서 생성 과정에 포함될 수 있으므로 사용자는 민감정보 입력에 유의해야 합니다.</p>
+        </div>
+      </section>
+
+      <!-- 12. 개인정보 이용 목적 -->
+      <section class="terms-section">
+        <h3>12. 개인정보 이용 목적</h3>
+        <p class="terms-text">회사는 수집된 데이터를 오직 다음 목적에만 사용합니다.</p>
+        <ol class="terms-list-numbered">
+          <li><strong>Daily Scrum 보고서 생성 및 제공</strong>(요약/구조화/정리 결과 제공)</li>
+          <li>서비스 품질 개선을 위한 최소 범위의 오류/장애 대응 및 보안 로그 관리</li>
+        </ol>
+        <p class="terms-text">회사는 광고 타게팅, 데이터 판매, 데이터 브로커 제공 등 <strong>보고서 생성과 무관한 목적</strong>으로 데이터를 이용하지 않습니다.</p>
+      </section>
+
+      <!-- 13. 처리의 법적 근거 -->
+      <section class="terms-section">
+        <h3>13. 처리의 법적 근거(동의)</h3>
+        <ol class="terms-list-numbered">
+          <li>회사는 사용자의 <strong>명시적 동의</strong>를 근거로 원문 데이터를 수집·이용·외부 전송을 수행합니다.</li>
+          <li>사용자는 동의를 거부할 수 있으며, 이 경우 핵심 기능(보고서 자동 생성 등)이 제한될 수 있습니다.</li>
+          <li>사용자는 언제든지 설정에서 기능 비활성화 또는 확장프로그램 제거로 동의를 철회할 수 있습니다.</li>
+        </ol>
+      </section>
+
+      <!-- 14. 외부 전송 및 처리 -->
+      <section class="terms-section">
+        <h3>14. 외부 전송 및 처리(Claude API 사용)</h3>
+        <p class="terms-text">회사는 보고서 생성(요약/구조화)을 위해 사용자가 동의한 원문 데이터를 외부 AI API(Anthropic Claude API)로 전송하여 처리할 수 있습니다.</p>
+        <ul class="terms-list">
+          <li><strong>전송되는 데이터(예시)</strong>: AI 도구 대화 원문(활성화 시), 협업/워크스페이스 제목 및 활동 메타데이터(연동 시), 전체 URL</li>
+          <li><strong>전송 목적</strong>: Daily Scrum 보고서 생성을 위한 요약/분류/구조화 처리</li>
+          <li><strong>전송 시점</strong>: 사용자가 보고서 생성을 실행하거나 자동 생성 트리거가 발생하는 경우</li>
+          <li><strong>전송 범위</strong>: 보고서 생성에 필요한 최소 범위</li>
+        </ul>
+        <p class="terms-text">사용자는 언제든지 설정에서 관련 기능을 비활성화하거나 확장프로그램을 제거하여 외부 전송을 중단할 수 있습니다.</p>
+      </section>
+
+      <!-- 15. 보관 기간 및 파기 -->
+      <section class="terms-section">
+        <h3>15. 보관 기간 및 파기</h3>
+        <ol class="terms-list-numbered">
+          <li>회사는 원칙적으로 개인정보 처리 목적이 달성되면 지체 없이 파기합니다.</li>
+          <li>다만 사용자가 서비스 이용을 지속하는 동안, 회사는 서비스 제공 및 보고서 히스토리 제공을 위해 원문 데이터를 <strong>계정 삭제 직전까지 보관</strong>할 수 있습니다.</li>
+          <li>사용자가 계정을 삭제한 경우, 회사는 <strong>계정 삭제일로부터 30일 이내</strong> 개인정보를 파기합니다.</li>
+          <li>파기 방법: 전자적 파일은 복구 불가능한 방식으로 삭제합니다.</li>
+        </ol>
+      </section>
+
+      <!-- 16. 데이터 보안 -->
+      <section class="terms-section">
+        <h3>16. 데이터 보안</h3>
+        <p class="terms-text">회사는 개인정보의 안전성 확보를 위해 합리적인 보호조치를 시행합니다.</p>
+        <ul class="terms-list">
+          <li><strong>전송 구간 암호화</strong>: TLS 등 안전한 통신 적용</li>
+          <li><strong>암호화</strong>: 데이터는 AES-GCM-256 등 강력한 방식으로 보호되도록 설계·운영합니다(전송/저장 과정 포함)</li>
+          <li><strong>저장 및 접근 통제</strong>: Supabase 등 서버에 안전하게 저장되며, 사용자 인증 및 DB 접근제어(예: RLS)로 본인만 접근 가능하도록 설계합니다</li>
+          <li>접근 권한 최소화, 접근 로그 관리, 보안 업데이트 등 운영적 보호조치</li>
         </ul>
       </section>
 
-      <section class="consent-section">
-        <h3>사용 목적</h3>
-        <p class="consent-text">
-          수집된 데이터는 <strong>Daily Scrum 보고서 생성</strong> 목적으로만 사용됩니다.
-          사고 과정, 작업 내용, 인지 흐름을 분석하여 자동으로 정리된 업무 보고서를 제공합니다.
-        </p>
+      <!-- 17. 제3자 제공 및 처리위탁 -->
+      <section class="terms-section">
+        <h3>17. 제3자 제공 및 처리위탁</h3>
+
+        <h4>17.1 제3자 제공</h4>
+        <p class="terms-text">회사는 사용자의 원문 데이터를 <strong>제3자에게 판매하거나 광고 목적</strong>으로 제공하지 않습니다.</p>
+
+        <h4>17.2 처리위탁</h4>
+        <p class="terms-text">회사는 서비스 제공을 위해 아래 업체에 개인정보 처리업무를 위탁할 수 있으며, 위탁계약을 통해 개인정보 보호 의무를 부과하고 감독합니다.</p>
+        <ol class="terms-list-numbered">
+          <li><strong>Anthropic (Claude API)</strong> — 위탁업무: 텍스트 요약/분류/구조화 등 보고서 생성을 위한 AI 처리. 처리 데이터: 사용자가 동의한 원문 데이터(요약에 필요한 범위, 전체 URL 포함 가능)</li>
+          <li><strong>Supabase</strong> — 위탁업무: 사용자 인증, 데이터베이스 저장/조회, 서비스 운영 인프라. 리전/국가: Southeast Asia(Singapore)</li>
+        </ol>
+        <p class="terms-text">수탁사가 추가/변경되는 경우 회사는 본 방침을 업데이트하고 고지합니다.</p>
       </section>
 
-      <section class="consent-section">
-        <h3>데이터 보안</h3>
-        <p class="consent-text">
-          모든 데이터는 <strong>AES-GCM-256 암호화</strong>를 통해 전송되며,
-          Supabase 서버에서 안전하게 저장됩니다. 사용자 인증(RLS)을 통해 본인만 접근할 수 있습니다.
-        </p>
+      <!-- 18. 개인정보 국외이전 -->
+      <section class="terms-section">
+        <h3>18. 개인정보 국외이전(처리위탁) 고지 및 동의</h3>
+        <p class="terms-text">회사는 Claude API 사용을 위해 개인정보를 국외로 이전(처리위탁)할 수 있습니다.</p>
+
+        <h4>18.1 국외이전 내역</h4>
+        <ul class="terms-list">
+          <li><strong>이전받는 자(수탁사)</strong>: Anthropic (Claude API 제공자)</li>
+          <li><strong>이전 국가</strong>: 미국(Anthropic 본사 소재지)</li>
+          <li><strong>이전 일시/방법</strong>: 보고서 생성 실행 또는 자동 생성 트리거 발생 시, 네트워크를 통한 API 전송</li>
+          <li><strong>이전 항목</strong>: 사용자가 동의한 원문 데이터(AI 도구 대화 원문, 제목/활동 메타데이터, 전체 URL)</li>
+          <li><strong>이용 목적</strong>: Daily Scrum 보고서 생성(요약/분류/구조화)</li>
+          <li><strong>보유/이용 기간</strong>: 수탁사의 정책 및 계약에 따르며, 회사는 필요 최소 기간 내 처리되도록 관리합니다.</li>
+        </ul>
+
+        <h4>18.2 국외이전 동의 거부 및 영향</h4>
+        <ul class="terms-list">
+          <li>사용자는 국외이전에 동의하지 않을 수 있습니다.</li>
+          <li>거부 시 <strong>Claude API 기반 요약/보고서 자동 생성 기능</strong> 제공이 제한될 수 있습니다.</li>
+        </ul>
       </section>
 
-      <section class="consent-section">
-        <h3>제3자 공유</h3>
-        <p class="consent-text">
-          수집된 데이터는 <strong>제3자와 공유되지 않으며</strong>, 판매하거나 광고 목적으로 사용하지 않습니다.
-        </p>
+      <!-- 19. 이용자 권리 -->
+      <section class="terms-section">
+        <h3>19. 이용자 권리(열람·정정·삭제·처리정지·철회)</h3>
+        <p class="terms-text">사용자는 언제든지 아래 권리를 행사할 수 있습니다.</p>
+        <ul class="terms-list">
+          <li>개인정보 열람/정정/삭제/처리정지 요청</li>
+          <li>동의 철회(설정에서 기능 비활성화 또는 확장프로그램 제거)</li>
+          <li>문의: w.out2026@gmail.com</li>
+        </ul>
+        <p class="terms-text">회사는 관련 법령에 따라 지체 없이 처리합니다.</p>
       </section>
 
-      <div class="consent-notice">
-        <p><strong>중요:</strong> 동의하지 않으면 어떤 데이터도 수집되지 않습니다.
-        언제든지 확장 프로그램을 제거하여 데이터 수집을 중단할 수 있습니다.</p>
+      <!-- 20. 개인정보 처리방침의 변경 -->
+      <section class="terms-section">
+        <h3>20. 개인정보 처리방침의 변경</h3>
+        <p class="terms-text">회사는 법령 또는 서비스 변경사항을 반영하기 위해 본 방침을 변경할 수 있으며, 변경 시 서비스 내 공지 또는 이메일 등 합리적인 방식으로 고지합니다.</p>
+      </section>
+
+      <!-- 동의 요약 -->
+      <div class="terms-divider">
+        <h2>데이터 수집 및 사용 동의 요약</h2>
+      </div>
+
+      <div class="terms-summary">
+        <ul class="terms-list">
+          <li><strong>수집</strong>: AI 대화 원문, 협업/워크스페이스 제목·활동 메타데이터, 전체 URL, 집계형 인터랙션 메트릭</li>
+          <li><strong>미수집</strong>: 비밀번호/결제정보, 키로깅(키 입력 내용), 복사/붙여넣기 "내용", 스크롤·클릭 정밀 좌표</li>
+          <li><strong>목적</strong>: Daily Scrum 보고서 생성(요약/구조화/정리)</li>
+          <li><strong>국외이전</strong>: 보고서 생성을 위해 미국(Anthropic 본사)로 데이터가 이전(처리위탁)될 수 있음</li>
+          <li><strong>철회</strong>: 언제든 설정에서 비활성화 또는 확장프로그램 제거로 중단 가능</li>
+        </ul>
       </div>
     </div>
 

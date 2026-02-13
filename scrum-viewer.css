@@ -991,6 +991,23 @@ body {
     flex-shrink: 0;
 }
 
+.evidence-url-text {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+    margin-left: 4px;
+    transition: color 0.2s;
+}
+
+.evidence-url-text:hover {
+    color: var(--gradient-start);
+    text-decoration: underline;
+}
+
 .evidence-insight {
     display: flex;
     align-items: flex-start;
