@@ -290,7 +290,6 @@
 
       return { query: queryText, answer: answerText };
     } catch (error) {
-      console.error('[Daily Scrum] Claude extraction error:', error);
       return null;
     }
   }
@@ -434,7 +433,6 @@
    */
   async function setupObserver(retryCount = 0) {
     if (!config) {
-      console.warn('[Daily Scrum] No config for platform:', platform);
       return;
     }
 

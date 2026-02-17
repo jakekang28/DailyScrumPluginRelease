@@ -615,7 +615,6 @@
       // 전역에 인스턴스 노출 (다음 리로드 시 cleanup 가능하도록)
       window[SCRIPT_ID] = tracker;
     } catch (error) {
-      console.error('[Daily Scrum] InteractionTracker initialization error:', error);
     }
   }
 

@@ -584,12 +584,10 @@
       } else if (platform === 'slack') {
         setupSlackCapture();
       } else {
-        console.warn('[Daily Scrum] Unknown collaboration platform');
         return;
       }
 
     } catch (error) {
-      console.error('[Daily Scrum] Initialization error:', error);
     }
   }
 
