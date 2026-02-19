@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BeCalm: AI-Work Digest",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Auto-summarize your daily work across AI tools and collaboration apps. End-to-end encrypted. Details in app.",
   "permissions": [
     "storage",
