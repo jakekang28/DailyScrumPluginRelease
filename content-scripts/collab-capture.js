@@ -205,8 +205,11 @@
     notionObserver = new MutationObserver((mutations) => {
       try {
         for (const mutation of mutations) {
-          const target = mutation.target;
-          if (target.nodeType !== Node.ELEMENT_NODE) continue;
+          let target = mutation.target;
+          if (target.nodeType !== Node.ELEMENT_NODE) {
+            target = target.parentElement;
+            if (!target) continue;
+          }
 
           // [data-block-id] 요소 찾기
           const block = target.closest('[data-block-id]');
@@ -222,7 +225,20 @@
           if (isSensitiveElement(block)) continue;
 
           // 이미 처리한 블록인지 확인 (최근 1초 이내)
-          if (processedBlocks.has(blockId)) continue;
+          if (processedBlocks.has(blockId)) {
+            const content = block.textContent?.trim();
+            if (content) {
+              for (let i = notionBuffer.length - 1; i >= 0; i--) {
+                if (notionBuffer[i].blockId === blockId) {
+                  notionBuffer[i].content = content;
+                  notionBuffer[i].timestamp = Date.now();
+                  break;
+                }
+              }
+              debouncedSendNotionData();
+            }
+            continue;
+          }
 
           const content = block.textContent?.trim();
           if (!content) continue;
