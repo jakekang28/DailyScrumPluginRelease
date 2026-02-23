@@ -140,6 +140,112 @@
     };
   }
 
+  function isElementInDocsEditor(target) {
+    const el = target && target.nodeType === 1 ? target : null;
+    const active = document.activeElement instanceof Element ? document.activeElement : null;
+    return !!(
+      el?.closest('.kix-appview-editor') ||
+      el?.closest('.kix-page-content-wrapper') ||
+      el?.closest('.kix-canvas-tile-content') ||
+      el?.getAttribute('contenteditable') === 'true' ||
+      active?.closest('.kix-appview-editor') ||
+      active?.closest('.kix-page-content-wrapper') ||
+      active?.closest('.kix-canvas-tile-content') ||
+      (document.hasFocus() && !!document.querySelector('.kix-appview-editor'))
+    );
+  }
+
+  function detachDocsIframeListeners() {
+    if (!docsIframeDoc || !docsIframeHandlers) return;
+    try {
+      docsIframeDoc.removeEventListener('input', docsIframeHandlers.input, true);
+      docsIframeDoc.removeEventListener('paste', docsIframeHandlers.paste, true);
+      docsIframeDoc.removeEventListener('keydown', docsIframeHandlers.keydown, true);
+      docsIframeDoc.removeEventListener('beforeinput', docsIframeHandlers.beforeinput, true);
+      docsIframeDoc.removeEventListener('compositionend', docsIframeHandlers.compositionend, true);
+    } catch {
+      // ignore detach failures
+    }
+    docsIframeDoc = null;
+    docsIframeHandlers = null;
+  }
+
+  function attachDocsIframeListeners() {
+    const iframe = document.querySelector('iframe.docs-texteventtarget-iframe');
+    const iframeDoc = iframe?.contentDocument;
+    if (!iframeDoc) return;
+    if (iframeDoc === docsIframeDoc) return;
+
+    detachDocsIframeListeners();
+
+    const markInteraction = (text) => {
+      hadRecentDocsInput = true;
+      lastDocsInteractionAt = Date.now();
+      pushTypingDelta(docsTypingBuffer, text);
+      docsInputDebouncedCapture?.();
+    };
+
+    const keydownHandler = (e) => {
+      const nonTextKeys = new Set([
+        'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Escape',
+        'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+        'PageUp', 'PageDown', 'Home', 'End'
+      ]);
+      if (nonTextKeys.has(e.key) || /^F\d{1,2}$/.test(e.key)) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      markInteraction(e.key.length === 1 ? e.key : '');
+    };
+
+    docsIframeHandlers = {
+      input: (e) => markInteraction(e.data),
+      paste: (e) => markInteraction(e.clipboardData?.getData('text/plain')),
+      keydown: keydownHandler,
+      beforeinput: (e) => {
+        const inputType = e.inputType || '';
+        if (!inputType.startsWith('insert') && !inputType.startsWith('delete')) return;
+        markInteraction(e.data);
+      },
+      compositionend: (e) => markInteraction(e.data),
+    };
+
+    iframeDoc.addEventListener('input', docsIframeHandlers.input, true);
+    iframeDoc.addEventListener('paste', docsIframeHandlers.paste, true);
+    iframeDoc.addEventListener('keydown', docsIframeHandlers.keydown, true);
+    iframeDoc.addEventListener('beforeinput', docsIframeHandlers.beforeinput, true);
+    iframeDoc.addEventListener('compositionend', docsIframeHandlers.compositionend, true);
+    docsIframeDoc = iframeDoc;
+  }
+
+  function isElementInSheetsEditor(target) {
+    if (!(target instanceof Element)) return false;
+    return !!(
+      target.closest('.cell-input') ||
+      target.closest('.docs-formula-bar-input') ||
+      target.closest('.waffle-grid-container')
+    );
+  }
+
+  function isElementInSlidesEditor(target) {
+    if (!(target instanceof Element)) return false;
+    return !!(
+      target.closest('.punch-viewer-content') ||
+      target.closest('.punch-viewer-svgpage') ||
+      target.getAttribute('contenteditable') === 'true'
+    );
+  }
+
+  function pushTypingDelta(buffer, text, maxItems = 40) {
+    const value = typeof text === 'string' ? text.trim() : '';
+    if (!value) return;
+    buffer.push({
+      text: value.length > 400 ? value.slice(0, 400) : value,
+      at: Date.now()
+    });
+    if (buffer.length > maxItems) {
+      buffer.splice(0, buffer.length - maxItems);
+    }
+  }
+
   // ============================================================================
   // Google Docs 캡처 (API 기반)
   // ============================================================================
@@ -149,12 +255,22 @@
   let lastDocsCapture = 0;
   let lastViewingDocId = null;
   let hadRecentDocsInput = false;
+  let lastDocsInteractionAt = 0;
+  let docsInputDebouncedCapture = null;
+  let docsKeydownListener = null;
+  let docsBeforeInputListener = null;
+  let docsCompositionEndListener = null;
+  let docsIframeBindInterval = null;
+  let docsIframeDoc = null;
+  let docsIframeHandlers = null;
+  let docsTypingBuffer = [];
   const DOCS_CAPTURE_INTERVAL = 30000; // 30초
+  const INPUT_CAPTURE_DEBOUNCE = 3000; // input burst 후 3초 뒤 강제 캡처
 
   /**
    * Google Docs 활동 캡처 (API 사용)
    */
-  async function captureGoogleDocsActivity() {
+  async function captureGoogleDocsActivity(force = false) {
     if (isStopped) return;
     try {
       // Context 유효성 검사 (확장프로그램 리로드 대응)
@@ -167,21 +283,26 @@
       if (document.hidden) return;
 
       const now = Date.now();
-      if (now - lastDocsCapture < DOCS_CAPTURE_INTERVAL) return;
+      if (!force && now - lastDocsCapture < DOCS_CAPTURE_INTERVAL) return;
 
       const documentTitle = document.title.replace(' - Google Docs', '').trim();
       const documentId = extractDocId(window.location.href);
 
-      if (!documentId) {
-        return;
-      }
+      if (!documentId) return;
 
       // 편집 중인지 확인 (cursor + document focus + editor active)
       const hasCursor = document.querySelector('.kix-cursor') !== null ||
                        document.querySelector('.docs-text-ui-cursor-blink') !== null;
       const inEditor = document.activeElement?.closest('.kix-appview-editor') !== null ||
                       document.activeElement?.getAttribute('contenteditable') === 'true';
-      const isEditing = (hasCursor && document.hasFocus() && inEditor) || hadRecentDocsInput;
+      const hasEditorRoot = document.querySelector('.kix-appview-editor') !== null;
+      const cursorEditingHeuristic = hasCursor && hasEditorRoot;
+      if (cursorEditingHeuristic) {
+        // Docs DOM/iframe differences can hide input events; keep a soft recent-activity signal.
+        lastDocsInteractionAt = now;
+      }
+      const recentlyInteracted = (now - lastDocsInteractionAt) < 10000;
+      const isEditing = hadRecentDocsInput || docsTypingBuffer.length > 0 || recentlyInteracted || cursorEditingHeuristic || (hasCursor && inEditor);
       hadRecentDocsInput = false;
 
       if (!isEditing) {
@@ -208,6 +329,28 @@
 
       // Editing — reset viewing tracker so next view is captured
       lastViewingDocId = null;
+
+      if (docsTypingBuffer.length > 0) {
+        const deltas = docsTypingBuffer.slice();
+        docsTypingBuffer = [];
+        lastDocsCapture = Date.now();
+        sendMessageWithRetry({
+          action: 'DATA_CAPTURED',
+          payload: {
+            type: 'DAILY_SCRUM_CAPTURE',
+            source: 'google-docs',
+            data: {
+              documentTitle: documentTitle,
+              documentId: documentId,
+              activityType: 'typing',
+              typedDeltas: deltas,
+              timestamp: Date.now(),
+              url: window.location.href
+            }
+          }
+        }).catch(() => {});
+        return;
+      }
 
       // Background에 Google API 요청
       const response = await sendMessageWithRetry({
@@ -249,8 +392,72 @@
    * Google Docs observer 설정
    */
   function setupDocsCapture() {
-    // input 이벤트로 editing 감지 보조 (DOM 스냅샷 불일치 대응)
-    document.addEventListener('input', () => { hadRecentDocsInput = true; }, true);
+    docsInputDebouncedCapture = debounce(() => {
+      captureGoogleDocsActivity(true).catch(() => {});
+    }, INPUT_CAPTURE_DEBOUNCE);
+
+    // 문서 본문/편집 영역 input만 즉시 캡처 트리거 (노이즈 방지)
+    document.addEventListener('input', (e) => {
+      if (!isElementInDocsEditor(e.target)) return;
+      hadRecentDocsInput = true;
+      lastDocsInteractionAt = Date.now();
+      pushTypingDelta(docsTypingBuffer, e.data);
+      docsInputDebouncedCapture?.();
+    }, true);
+    // 복붙(키보드/컨텍스트 메뉴)도 편집 이벤트로 간주
+    document.addEventListener('paste', (e) => {
+      if (!isElementInDocsEditor(e.target)) return;
+      hadRecentDocsInput = true;
+      lastDocsInteractionAt = Date.now();
+      pushTypingDelta(docsTypingBuffer, e.clipboardData?.getData('text/plain'));
+      docsInputDebouncedCapture?.();
+    }, true);
+
+    // Docs는 실제 입력 타겟이 selector 밖에 위치하는 경우가 있어 keydown 보조 감지 필요
+    docsKeydownListener = (e) => {
+      const nonTextKeys = new Set([
+        'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Escape',
+        'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+        'PageUp', 'PageDown', 'Home', 'End'
+      ]);
+      if (nonTextKeys.has(e.key) || /^F\d{1,2}$/.test(e.key)) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (!document.querySelector('.kix-appview-editor')) return;
+
+      hadRecentDocsInput = true;
+      lastDocsInteractionAt = Date.now();
+      if (e.key.length === 1) {
+        pushTypingDelta(docsTypingBuffer, e.key);
+      }
+      docsInputDebouncedCapture?.();
+    };
+    document.addEventListener('keydown', docsKeydownListener, true);
+
+    // IME(한글 조합 입력) 보조 감지
+    docsCompositionEndListener = (e) => {
+      if (!isElementInDocsEditor(e.target)) return;
+      hadRecentDocsInput = true;
+      lastDocsInteractionAt = Date.now();
+      pushTypingDelta(docsTypingBuffer, e.data);
+      docsInputDebouncedCapture?.();
+    };
+    document.addEventListener('compositionend', docsCompositionEndListener, true);
+
+    // beforeinput은 Docs 내부 편집 이벤트를 가장 안정적으로 감지
+    docsBeforeInputListener = (e) => {
+      if (!isElementInDocsEditor(e.target)) return;
+      const inputType = e.inputType || '';
+      if (!inputType.startsWith('insert') && !inputType.startsWith('delete')) return;
+      hadRecentDocsInput = true;
+      lastDocsInteractionAt = Date.now();
+      pushTypingDelta(docsTypingBuffer, e.data);
+      docsInputDebouncedCapture?.();
+    };
+    document.addEventListener('beforeinput', docsBeforeInputListener, true);
+
+    // Docs 입력 이벤트는 texteventtarget iframe 안에서 발생할 수 있음
+    attachDocsIframeListeners();
+    docsIframeBindInterval = setInterval(attachDocsIframeListeners, 2000);
 
     // 주기적 캡처 (30초마다)
     docsIntervalId = setInterval(captureGoogleDocsActivity, DOCS_CAPTURE_INTERVAL);
@@ -269,12 +476,15 @@
   let lastSheetsCapture = 0;
   let lastViewingSheetsId = null;
   let hadRecentSheetsInput = false;
+  let sheetsInputDebouncedCapture = null;
+  let sheetsKeydownListener = null;
+  let sheetsTypingBuffer = [];
   const SHEETS_CAPTURE_INTERVAL = 30000; // 30초
 
   /**
    * Google Sheets 활동 캡처 (API 사용)
    */
-  async function captureGoogleSheetsActivity() {
+  async function captureGoogleSheetsActivity(force = false) {
     if (isStopped) return;
     try {
       // Context 유효성 검사 (확장프로그램 리로드 대응)
@@ -287,14 +497,12 @@
       if (document.hidden) return;
 
       const now = Date.now();
-      if (now - lastSheetsCapture < SHEETS_CAPTURE_INTERVAL) return;
+      if (!force && now - lastSheetsCapture < SHEETS_CAPTURE_INTERVAL) return;
 
       const documentTitle = document.title.replace(' - Google Sheets', '').trim();
       const documentId = extractDocId(window.location.href);
 
-      if (!documentId) {
-        return;
-      }
+      if (!documentId) return;
 
       // 활성 시트 이름 (DOM에서)
       const activeSheetTab = document.querySelector('.docs-sheet-active-tab') ||
@@ -337,6 +545,29 @@
       // Editing — reset viewing tracker
       lastViewingSheetsId = null;
 
+      if (sheetsTypingBuffer.length > 0) {
+        const deltas = sheetsTypingBuffer.slice();
+        sheetsTypingBuffer = [];
+        lastSheetsCapture = Date.now();
+        sendMessageWithRetry({
+          action: 'DATA_CAPTURED',
+          payload: {
+            type: 'DAILY_SCRUM_CAPTURE',
+            source: 'google-sheets',
+            data: {
+              documentTitle: documentTitle,
+              documentId: documentId,
+              activeSheet: activeSheet,
+              activityType: 'typing',
+              typedDeltas: deltas,
+              timestamp: Date.now(),
+              url: window.location.href
+            }
+          }
+        }).catch(() => {});
+        return;
+      }
+
       // Background에 Google API 요청
       const response = await sendMessageWithRetry({
         action: 'GOOGLE_API_REQUEST',
@@ -377,8 +608,39 @@
    * Google Sheets observer 설정
    */
   function setupSheetsCapture() {
-    // input 이벤트로 editing 감지 보조 (DOM 스냅샷 불일치 대응)
-    document.addEventListener('input', () => { hadRecentSheetsInput = true; }, true);
+    sheetsInputDebouncedCapture = debounce(() => {
+      captureGoogleSheetsActivity(true).catch(() => {});
+    }, INPUT_CAPTURE_DEBOUNCE);
+
+    // 시트 본문/수식 입력창 input만 즉시 캡처 트리거 (노이즈 방지)
+    document.addEventListener('input', (e) => {
+      if (!isElementInSheetsEditor(e.target)) return;
+      hadRecentSheetsInput = true;
+      pushTypingDelta(sheetsTypingBuffer, e.data);
+      sheetsInputDebouncedCapture?.();
+    }, true);
+    document.addEventListener('paste', (e) => {
+      if (!isElementInSheetsEditor(e.target)) return;
+      hadRecentSheetsInput = true;
+      pushTypingDelta(sheetsTypingBuffer, e.clipboardData?.getData('text/plain'));
+      sheetsInputDebouncedCapture?.();
+    }, true);
+
+    // Sheets는 실제 입력 타겟이 예상 selector 밖인 경우가 있어 keydown 보조 감지
+    sheetsKeydownListener = (e) => {
+      const isTypingKey = e.key.length === 1 || ['Backspace', 'Delete', 'Enter', 'Tab'].includes(e.key);
+      if (!isTypingKey) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (!document.hasFocus()) return;
+      if (!document.querySelector('.waffle-grid-container')) return;
+
+      hadRecentSheetsInput = true;
+      if (e.key.length === 1) {
+        pushTypingDelta(sheetsTypingBuffer, e.key);
+      }
+      sheetsInputDebouncedCapture?.();
+    };
+    document.addEventListener('keydown', sheetsKeydownListener, true);
 
     // 주기적 캡처 (30초마다)
     sheetsIntervalId = setInterval(captureGoogleSheetsActivity, SHEETS_CAPTURE_INTERVAL);
@@ -397,12 +659,13 @@
   let lastSlidesCapture = 0;
   let lastViewingSlidesId = null;
   let hadRecentSlidesInput = false;
+  let slidesInputDebouncedCapture = null;
   const SLIDES_CAPTURE_INTERVAL = 30000; // 30초
 
   /**
    * Google Slides 활동 캡처 (API 사용)
    */
-  async function captureGoogleSlidesActivity() {
+  async function captureGoogleSlidesActivity(force = false) {
     if (isStopped) return;
     try {
       // Context 유효성 검사 (확장프로그램 리로드 대응)
@@ -415,14 +678,12 @@
       if (document.hidden) return;
 
       const now = Date.now();
-      if (now - lastSlidesCapture < SLIDES_CAPTURE_INTERVAL) return;
+      if (!force && now - lastSlidesCapture < SLIDES_CAPTURE_INTERVAL) return;
 
       const documentTitle = document.title.replace(' - Google Slides', '').trim();
       const documentId = extractDocId(window.location.href);
 
-      if (!documentId) {
-        return;
-      }
+      if (!documentId) return;
 
       // 발표자 노트 (DOM에서)
       const speakerNotesElement = document.querySelector('.punch-viewer-speakernotes-text') ||
@@ -511,8 +772,21 @@
    * Google Slides observer 설정
    */
   function setupSlidesCapture() {
-    // input 이벤트로 editing 감지 보조 (DOM 스냅샷 불일치 대응)
-    document.addEventListener('input', () => { hadRecentSlidesInput = true; }, true);
+    slidesInputDebouncedCapture = debounce(() => {
+      captureGoogleSlidesActivity(true).catch(() => {});
+    }, INPUT_CAPTURE_DEBOUNCE);
+
+    // 슬라이드 편집 영역 input만 즉시 캡처 트리거 (노이즈 방지)
+    document.addEventListener('input', (e) => {
+      if (!isElementInSlidesEditor(e.target)) return;
+      hadRecentSlidesInput = true;
+      slidesInputDebouncedCapture?.();
+    }, true);
+    document.addEventListener('paste', (e) => {
+      if (!isElementInSlidesEditor(e.target)) return;
+      hadRecentSlidesInput = true;
+      slidesInputDebouncedCapture?.();
+    }, true);
 
     // 주기적 캡처 (30초마다)
     slidesIntervalId = setInterval(captureGoogleSlidesActivity, SLIDES_CAPTURE_INTERVAL);
@@ -644,7 +918,30 @@
         driveObserver.disconnect();
         driveObserver = null;
       }
+      if (docsKeydownListener) {
+        document.removeEventListener('keydown', docsKeydownListener, true);
+        docsKeydownListener = null;
+      }
+      if (docsBeforeInputListener) {
+        document.removeEventListener('beforeinput', docsBeforeInputListener, true);
+        docsBeforeInputListener = null;
+      }
+      if (docsCompositionEndListener) {
+        document.removeEventListener('compositionend', docsCompositionEndListener, true);
+        docsCompositionEndListener = null;
+      }
+      if (docsIframeBindInterval) {
+        clearInterval(docsIframeBindInterval);
+        docsIframeBindInterval = null;
+      }
+      detachDocsIframeListeners();
+      if (sheetsKeydownListener) {
+        document.removeEventListener('keydown', sheetsKeydownListener, true);
+        sheetsKeydownListener = null;
+      }
       processedDriveActions.clear();
+      docsTypingBuffer = [];
+      sheetsTypingBuffer = [];
     } catch (error) {
     }
   }

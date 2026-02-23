@@ -130,7 +130,10 @@
   let notionUrlPollId = null;
   let notionHandleUrlChange = null;
   let notionTrackEditedBlock = null;
+  let notionTrackInput = null;
+  let notionTrackPaste = null;
   let notionTrackFocusin = null;
+  let notionVisibilityHandler = null;
   const processedBlocks = new Set();
   const editedBlockIds = new Set();
   let notionBuffer = [];
@@ -160,6 +163,36 @@
     } catch (error) {
       return 'unknown';
     }
+  }
+
+  function getNotionEditableFallback(target, inputEvent) {
+    const el = target instanceof Element ? target : null;
+    if (!el) return null;
+
+    // 1) Prefer actual typed delta for minimal, typing-focused capture.
+    const typed = typeof inputEvent?.data === 'string' ? inputEvent.data.trim() : '';
+    if (typed) {
+      return {
+        blockId: `fallback:${window.location.pathname}:typed`,
+        content: typed,
+        type: 'typed_delta',
+        timestamp: Date.now()
+      };
+    }
+
+    // 2) If delta is unavailable (e.g., delete/composition), capture a short local tail only.
+    const editable = el.closest('[contenteditable="true"], [role="textbox"]');
+    if (!editable) return null;
+    const fullText = editable.textContent?.trim() || '';
+    if (!fullText) return null;
+    const content = fullText.length > 160 ? fullText.slice(-160) : fullText;
+
+    return {
+      blockId: `fallback:${window.location.pathname}:context`,
+      content,
+      type: 'typed_context',
+      timestamp: Date.now()
+    };
   }
 
   /**
@@ -195,12 +228,70 @@
     };
 
     // Track edited blocks via input event (typing in contenteditable)
-    document.body.addEventListener('input', (e) => {
+    // and update buffer immediately so capture does not depend solely on MutationObserver timing.
+    notionTrackInput = function(e) {
       lastInputTime = Date.now();
+      const block = e.target.closest('[data-block-id]');
+      const typedDelta = typeof e.data === 'string' ? e.data.trim() : '';
       notionTrackEditedBlock(e);
-    }, true);
+      if (!block) {
+        const fallback = getNotionEditableFallback(e.target, e);
+        if (!fallback) return;
+        const existingFallbackIdx = notionBuffer.findIndex(item => item.blockId === fallback.blockId);
+        if (existingFallbackIdx >= 0) {
+          notionBuffer[existingFallbackIdx] = fallback;
+        } else {
+          notionBuffer.push(fallback);
+        }
+        debouncedSendNotionData();
+        return;
+      }
+
+      const blockId = block.getAttribute('data-block-id');
+      const blockText = block.textContent?.trim() || '';
+      const content = blockText || typedDelta;
+      if (!blockId || !content) return;
+
+      const blockData = {
+        blockId,
+        content,
+        type: blockText ? detectBlockType(block) : 'typed_delta',
+        timestamp: Date.now()
+      };
+      const existingIdx = notionBuffer.findIndex(item => item.blockId === blockId);
+      if (existingIdx >= 0) {
+        notionBuffer[existingIdx] = blockData;
+      } else {
+        notionBuffer.push(blockData);
+      }
+      debouncedSendNotionData();
+    };
+    document.body.addEventListener('input', notionTrackInput, true);
+    // Paste should be captured as typed content, not full-page editable text.
+    notionTrackPaste = function(e) {
+      const pasted = e.clipboardData?.getData('text/plain')?.trim();
+      if (!pasted) return;
+      const snippet = pasted.length > 400 ? pasted.slice(0, 400) : pasted;
+      const fallback = {
+        blockId: `fallback:${window.location.pathname}:paste`,
+        content: snippet,
+        type: 'typed_delta',
+        timestamp: Date.now()
+      };
+      const idx = notionBuffer.findIndex(item => item.blockId === fallback.blockId);
+      if (idx >= 0) notionBuffer[idx] = fallback;
+      else notionBuffer.push(fallback);
+      debouncedSendNotionData();
+    };
+    document.body.addEventListener('paste', notionTrackPaste, true);
     // Track focus into blocks only near recent input (formatting, slash commands)
     document.body.addEventListener('focusin', notionTrackFocusin, true);
+    notionVisibilityHandler = function() {
+      if (document.hidden) {
+        flushNotionBuffer().catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', notionVisibilityHandler);
 
     notionObserver = new MutationObserver((mutations) => {
       try {
@@ -567,6 +658,22 @@
       if (notionHandleUrlChange) {
         window.removeEventListener('popstate', notionHandleUrlChange);
         notionHandleUrlChange = null;
+      }
+      if (notionTrackInput) {
+        document.body.removeEventListener('input', notionTrackInput, true);
+        notionTrackInput = null;
+      }
+      if (notionTrackFocusin) {
+        document.body.removeEventListener('focusin', notionTrackFocusin, true);
+        notionTrackFocusin = null;
+      }
+      if (notionTrackPaste) {
+        document.body.removeEventListener('paste', notionTrackPaste, true);
+        notionTrackPaste = null;
+      }
+      if (notionVisibilityHandler) {
+        document.removeEventListener('visibilitychange', notionVisibilityHandler);
+        notionVisibilityHandler = null;
       }
       if (slackObserver) {
         slackObserver.disconnect();
