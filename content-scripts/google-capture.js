@@ -148,6 +148,7 @@
   let docsIntervalId = null;
   let lastDocsCapture = 0;
   let lastViewingDocId = null;
+  let hadRecentDocsInput = false;
   const DOCS_CAPTURE_INTERVAL = 30000; // 30초
 
   /**
@@ -180,7 +181,8 @@
                        document.querySelector('.docs-text-ui-cursor-blink') !== null;
       const inEditor = document.activeElement?.closest('.kix-appview-editor') !== null ||
                       document.activeElement?.getAttribute('contenteditable') === 'true';
-      const isEditing = hasCursor && document.hasFocus() && inEditor;
+      const isEditing = (hasCursor && document.hasFocus() && inEditor) || hadRecentDocsInput;
+      hadRecentDocsInput = false;
 
       if (!isEditing) {
         // Viewing — skip API call, send lightweight record once per document
@@ -247,6 +249,9 @@
    * Google Docs observer 설정
    */
   function setupDocsCapture() {
+    // input 이벤트로 editing 감지 보조 (DOM 스냅샷 불일치 대응)
+    document.addEventListener('input', () => { hadRecentDocsInput = true; }, true);
+
     // 주기적 캡처 (30초마다)
     docsIntervalId = setInterval(captureGoogleDocsActivity, DOCS_CAPTURE_INTERVAL);
 
@@ -263,6 +268,7 @@
   let sheetsIntervalId = null;
   let lastSheetsCapture = 0;
   let lastViewingSheetsId = null;
+  let hadRecentSheetsInput = false;
   const SHEETS_CAPTURE_INTERVAL = 30000; // 30초
 
   /**
@@ -302,7 +308,8 @@
                        (cellInput !== null && (
                          cellInput.classList.contains('cell-input-active') ||
                          cellInput.contains(document.activeElement)
-                       ));
+                       )) || hadRecentSheetsInput;
+      hadRecentSheetsInput = false;
 
       if (!isEditing) {
         // Viewing — skip API call, send lightweight record once per document
@@ -370,6 +377,9 @@
    * Google Sheets observer 설정
    */
   function setupSheetsCapture() {
+    // input 이벤트로 editing 감지 보조 (DOM 스냅샷 불일치 대응)
+    document.addEventListener('input', () => { hadRecentSheetsInput = true; }, true);
+
     // 주기적 캡처 (30초마다)
     sheetsIntervalId = setInterval(captureGoogleSheetsActivity, SHEETS_CAPTURE_INTERVAL);
 
@@ -386,6 +396,7 @@
   let slidesIntervalId = null;
   let lastSlidesCapture = 0;
   let lastViewingSlidesId = null;
+  let hadRecentSlidesInput = false;
   const SLIDES_CAPTURE_INTERVAL = 30000; // 30초
 
   /**
@@ -428,7 +439,8 @@
       const hasTextCursor = document.querySelector('.cursor-caret') !== null ||
                            document.querySelector('.punch-viewer-svgpage-textbox-selected') !== null;
       const hasActiveShape = document.querySelector('.punch-selection-border') !== null;
-      const isEditing = !isPresenting && document.hasFocus() && (hasTextCursor || hasActiveShape);
+      const isEditing = (!isPresenting && document.hasFocus() && (hasTextCursor || hasActiveShape)) || hadRecentSlidesInput;
+      hadRecentSlidesInput = false;
 
       if (!isEditing) {
         // Presenting/viewing — skip API call, send lightweight record once per document
@@ -499,6 +511,9 @@
    * Google Slides observer 설정
    */
   function setupSlidesCapture() {
+    // input 이벤트로 editing 감지 보조 (DOM 스냅샷 불일치 대응)
+    document.addEventListener('input', () => { hadRecentSlidesInput = true; }, true);
+
     // 주기적 캡처 (30초마다)
     slidesIntervalId = setInterval(captureGoogleSlidesActivity, SLIDES_CAPTURE_INTERVAL);
 
